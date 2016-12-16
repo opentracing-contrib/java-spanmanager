@@ -1,6 +1,6 @@
 # java-activespan
 
-This library provides means to manage an _active span_ within the current process
+This library provides a way to manage an _active span_ within the current process
 and propagate it to other threads.
 
 ## ActiveSpanManager
@@ -40,3 +40,7 @@ To enable a custom manager:
  2. Using the standard Java `ServiceLoader`, bundle a 
     `META-INF/services/io.opentracing.contrib.activespan.ActiveSpanManager` service file with
     the classname of the implementation.
+
+## Examples
+
+_TODO create examples_

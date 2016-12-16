@@ -15,7 +15,7 @@ import io.opentracing.propagation.Format;
  * The {@link SpanBuilder} of this Tracer will short-circuit to the
  * {@link io.opentracing.NoopSpanBuilder NoopSpanBuilder}.
  * This means {@link io.opentracing.NoopSpan NoopSpan}
- * instances will be activated or deactivated through this tracer.
+ * instances will <strong>not</strong> be activated or deactivated through this tracer.
  *
  * @author Sjoerd Talsma
  */

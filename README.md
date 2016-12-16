@@ -32,8 +32,9 @@ are provided by the `SpanAwareExecutors` class.
 
 It is possible to provide a custom implementation of `ActiveSpanManager`.
 This may be useful if you already have a method in place to propagate contextual information
-from one thread to another. Creating a custom manager allows you to piggyback the _active span_ on
-your existing propagation mechanism.  
+from one thread to another. Creating a custom manager is one way to piggyback the _active span_ on
+your existing propagation mechanism. Another way would be to call _activate_ and _deactivate_
+at the appropriate moments in your propagation mechanism.  
 
 To enable a custom manager:
  1. Programmatically, call the `ActiveSpanManager.setActiveSpanManager()` with the new implementation.

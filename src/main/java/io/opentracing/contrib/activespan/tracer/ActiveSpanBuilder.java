@@ -23,9 +23,13 @@ final class ActiveSpanBuilder implements SpanBuilder {
 
     protected SpanBuilder delegate;
 
-    ActiveSpanBuilder(SpanBuilder delegate) {
+    private ActiveSpanBuilder(SpanBuilder delegate) {
         if (delegate == null) throw new NullPointerException("Delegate SpanBuilder was <null>.");
         this.delegate = delegate;
+    }
+
+    static SpanBuilder of(SpanBuilder spanBuilder) {
+        return spanBuilder instanceof NoopSpanBuilder ? spanBuilder : new ActiveSpanBuilder(spanBuilder);
     }
 
     /**

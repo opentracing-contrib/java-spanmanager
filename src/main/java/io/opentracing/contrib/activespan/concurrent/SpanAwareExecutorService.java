@@ -28,19 +28,19 @@ public class SpanAwareExecutorService implements ExecutorService {
     }
 
     public void execute(Runnable command) {
-        delegate.execute(SpanAwareRunnable.of(command));
+        delegate.execute(RunnableWithActiveSpan.of(command));
     }
 
     public Future<?> submit(Runnable task) {
-        return delegate.submit(SpanAwareRunnable.of(task));
+        return delegate.submit(RunnableWithActiveSpan.of(task));
     }
 
     public <T> Future<T> submit(Runnable task, T result) {
-        return delegate.submit(SpanAwareRunnable.of(task), result);
+        return delegate.submit(RunnableWithActiveSpan.of(task), result);
     }
 
     public <T> Future<T> submit(Callable<T> task) {
-        return delegate.submit(SpanAwareCallable.of(task));
+        return delegate.submit(CallableWithActiveSpan.of(task));
     }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
@@ -62,7 +62,7 @@ public class SpanAwareExecutorService implements ExecutorService {
     }
 
     /**
-     * Wraps {@link SpanAwareCallable} objects.
+     * Wraps {@link CallableWithActiveSpan} objects.
      *
      * @param tasks The tasks to be scheduled.
      * @param <T>   The common type of all scheduled tasks.
@@ -73,7 +73,7 @@ public class SpanAwareExecutorService implements ExecutorService {
         final Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
         final Span activeSpan = ActiveSpanManager.activeSpan();
         for (Callable<T> task : tasks) {
-            result.add(new SpanAwareCallable<T>(task, activeSpan));
+            result.add(new CallableWithActiveSpan<T>(task, activeSpan));
         }
         return result;
     }

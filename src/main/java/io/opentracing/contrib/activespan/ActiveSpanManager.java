@@ -2,8 +2,8 @@ package io.opentracing.contrib.activespan;
 
 import io.opentracing.NoopSpan;
 import io.opentracing.Span;
-import io.opentracing.contrib.activespan.concurrent.SpanAwareCallable;
-import io.opentracing.contrib.activespan.concurrent.SpanAwareRunnable;
+import io.opentracing.contrib.activespan.concurrent.CallableWithActiveSpan;
+import io.opentracing.contrib.activespan.concurrent.RunnableWithActiveSpan;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -134,8 +134,8 @@ public abstract class ActiveSpanManager {
      * @param <V>      The return type of the wrapped call.
      * @return The wrapped call executing with the active span of the scheduling process.
      */
-    public static <V> SpanAwareCallable<V> spanAware(Callable<V> callable) {
-        return SpanAwareCallable.of(callable);
+    public static <V> CallableWithActiveSpan<V> withActiveSpan(Callable<V> callable) {
+        return CallableWithActiveSpan.of(callable);
     }
 
     /**
@@ -145,8 +145,8 @@ public abstract class ActiveSpanManager {
      * @param runnable The runnable to wrap.
      * @return The wrapped runnable executing with the active span of the scheduling process.
      */
-    public static SpanAwareRunnable spanAware(Runnable runnable) {
-        return SpanAwareRunnable.of(runnable);
+    public static RunnableWithActiveSpan withActiveSpan(Runnable runnable) {
+        return RunnableWithActiveSpan.of(runnable);
     }
 
     /**

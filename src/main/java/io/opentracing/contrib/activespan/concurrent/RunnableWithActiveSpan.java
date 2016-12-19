@@ -10,12 +10,12 @@ import io.opentracing.contrib.activespan.ActiveSpanManager.SpanDeactivator;
  *
  * @author Sjoerd Talsma
  */
-public class SpanAwareRunnable implements Runnable {
+public class RunnableWithActiveSpan implements Runnable {
 
     protected final Runnable delegate;
     private final Span parentSpan;
 
-    protected SpanAwareRunnable(Runnable delegate, Span parentSpan) {
+    protected RunnableWithActiveSpan(Runnable delegate, Span parentSpan) {
         if (delegate == null) throw new NullPointerException("Runnable delegate is <null>.");
         this.delegate = delegate;
         this.parentSpan = parentSpan;
@@ -29,8 +29,8 @@ public class SpanAwareRunnable implements Runnable {
      * @return The wrapped runnable that propagates the active span to another thread.
      * @see ActiveSpanManager#activeSpan()
      */
-    public static SpanAwareRunnable of(Runnable delegate) {
-        return new SpanAwareRunnable(delegate, ActiveSpanManager.activeSpan());
+    public static RunnableWithActiveSpan of(Runnable delegate) {
+        return new RunnableWithActiveSpan(delegate, ActiveSpanManager.activeSpan());
     }
 
     /**
@@ -39,12 +39,12 @@ public class SpanAwareRunnable implements Runnable {
      * <em>Please note:</em> it is <strong>not</strong> necessary to call this method with the
      * {@link ActiveSpanManager#activeSpan() current active span} as that will be used {@link #of(Runnable) by default}.
      *
-     * @param parentSpan The span to use as active parent in the new thread.
-     * @return A new runnable object that will propagate the parent span to another thread.
+     * @param activeSpan The span to become the active span when running the delegate.
+     * @return A new runnable object that will propagate the given span to another thread.
      * @see #of(Runnable)
      */
-    public SpanAwareRunnable withParent(Span parentSpan) {
-        return new SpanAwareRunnable(delegate, parentSpan);
+    public RunnableWithActiveSpan withParent(Span activeSpan) {
+        return new RunnableWithActiveSpan(delegate, activeSpan);
     }
 
     /**

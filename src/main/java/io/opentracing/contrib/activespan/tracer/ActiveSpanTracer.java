@@ -9,7 +9,7 @@ import io.opentracing.propagation.Format;
 /**
  * Wrapper that forwards all calls to another {@link Tracer} implementation.<br>
  * {@link io.opentracing.Span Spans} created with this tracer are
- * {@link ActiveSpanManager#setActiveSpan(Span) activated} when started and
+ * {@link ActiveSpanManager#activate(Span) activated} when started and
  * {@link ActiveSpanManager#deactivate(ActiveSpanManager.SpanDeactivator) deactivated} when finished.
  * <p>
  * The {@link SpanBuilder} of this Tracer will short-circuit to the
@@ -40,7 +40,7 @@ public class ActiveSpanTracer implements Tracer {
     }
 
     public SpanBuilder buildSpan(String operationName) {
-        return new ActiveSpanBuilder(delegate.buildSpan(operationName));
+        return ActiveSpanBuilder.of(delegate.buildSpan(operationName));
     }
 
     @Override

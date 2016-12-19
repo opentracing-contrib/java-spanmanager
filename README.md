@@ -9,7 +9,7 @@ The core of this library, this class provides
  1. The `activeSpan()` method to return the _active span_ in the current process.   
     If there is no active span, a `NoopSpan` is returned instead.
  2. Modifications to the _active span_ can be made through the `activate()` and `deactivate()` methods.
- 3. Utility `spanAware()` methods to create _span aware_ `Runnable` and `Callable` instances
+ 3. Utility `withActiveSpan()` methods to create `Runnable` and `Callable` instances
     that execute with the active span from the scheduling thread.
 
 ## ActiveSpanTracer

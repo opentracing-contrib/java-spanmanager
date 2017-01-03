@@ -10,7 +10,7 @@ import java.io.Closeable;
 public interface SpanDeactivator extends Closeable {
 
     /**
-     * Either the active span or one that was the active span at some point.
+     * The span that is the active span or has been at some point.
      *
      * @return The contained span to be deactivated.
      */
@@ -23,7 +23,7 @@ public interface SpanDeactivator extends Closeable {
      * <ol>
      * <li>It is encouraged to restore the active span as it was before the contained span was activated
      * (providing stack-like behaviour).</li>
-     * <li>It must be possible to repeatedly call <code>deactivate</code> without any side effects.</li>
+     * <li>It must be possible to repeatedly call <code>deactivate</code> without side effects.</li>
      * </ol>
      */
     void deactivate();

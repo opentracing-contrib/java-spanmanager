@@ -4,7 +4,7 @@ import io.opentracing.NoopSpan;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.contrib.activespan.ActiveSpanManager;
-import io.opentracing.contrib.activespan.ActiveSpanManager.SpanDeactivator;
+import io.opentracing.contrib.activespan.SpanDeactivator;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,8 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Implementation of an 'active span'.<br>
  * This active span will deactivate itself when it is {@link #finish() finished} or {@link #close() closed}.<br>
  * All other span functionality is forwareded to the delegate Span.
- *
- * @author Sjoerd Talsma
  */
 final class ActiveSpan implements Span {
 
@@ -47,7 +45,7 @@ final class ActiveSpan implements Span {
      * Deactivates this active span (only once).
      */
     private void deactivate() {
-        if (deactivated.compareAndSet(false, true)) ActiveSpanManager.deactivate(deactivator);
+        if (deactivated.compareAndSet(false, true)) deactivator.deactivate();
     }
 
     /**

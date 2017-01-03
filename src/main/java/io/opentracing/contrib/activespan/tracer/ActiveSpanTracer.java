@@ -4,20 +4,19 @@ import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.activespan.ActiveSpanManager;
+import io.opentracing.contrib.activespan.SpanDeactivator;
 import io.opentracing.propagation.Format;
 
 /**
  * Wrapper that forwards all calls to another {@link Tracer} implementation.<br>
  * {@link io.opentracing.Span Spans} created with this tracer are
  * {@link ActiveSpanManager#activate(Span) activated} when started and
- * {@link ActiveSpanManager#deactivate(ActiveSpanManager.SpanDeactivator) deactivated} when finished.
+ * {@link SpanDeactivator#deactivate() deactivated} when finished.
  * <p>
  * The {@link SpanBuilder} of this Tracer will short-circuit to the
  * {@link io.opentracing.NoopSpanBuilder NoopSpanBuilder}.
  * This means {@link io.opentracing.NoopSpan NoopSpan}
  * instances will <strong>not</strong> be activated or deactivated through this tracer.
- *
- * @author Sjoerd Talsma
  */
 public class ActiveSpanTracer implements Tracer {
 
@@ -29,9 +28,8 @@ public class ActiveSpanTracer implements Tracer {
     }
 
     public <C> void inject(SpanContext spanContext, Format<C> format, C carrier) {
-        if (spanContext instanceof ActiveSpanBuilder) { // Weird that Builder extends Context!
-            spanContext = ((ActiveSpanBuilder) spanContext).delegate;
-        }
+        // Weird that Builder extends Context!
+        if (spanContext instanceof ActiveSpanBuilder) spanContext = ((ActiveSpanBuilder) spanContext).delegate;
         delegate.inject(spanContext, format, carrier);
     }
 

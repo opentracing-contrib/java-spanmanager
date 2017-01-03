@@ -11,8 +11,6 @@ import java.util.concurrent.*;
 /**
  * {@link ExecutorService} wrapper that will propagate the {@link ActiveSpanManager#activeSpan() active span}
  * into the calls that are scheduled.
- *
- * @author Sjoerd Talsma
  */
 public class SpanAwareExecutorService implements ExecutorService {
     protected final ExecutorService delegate;
@@ -22,7 +20,7 @@ public class SpanAwareExecutorService implements ExecutorService {
         this.delegate = delegate;
     }
 
-    public static ExecutorService wrap(final ExecutorService delegate) {
+    public static SpanAwareExecutorService wrap(final ExecutorService delegate) {
         return delegate instanceof SpanAwareExecutorService ? (SpanAwareExecutorService) delegate
                 : new SpanAwareExecutorService(delegate);
     }
@@ -70,8 +68,8 @@ public class SpanAwareExecutorService implements ExecutorService {
      */
     protected <T> Collection<? extends Callable<T>> spanAwareTasks(final Collection<? extends Callable<T>> tasks) {
         if (tasks == null) throw new NullPointerException("Collection of scheduled tasks is <null>.");
-        final Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
-        final Span activeSpan = ActiveSpanManager.activeSpan();
+        Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
+        Span activeSpan = ActiveSpanManager.get().activeSpan();
         for (Callable<T> task : tasks) {
             result.add(new CallableWithActiveSpan<T>(task, activeSpan));
         }

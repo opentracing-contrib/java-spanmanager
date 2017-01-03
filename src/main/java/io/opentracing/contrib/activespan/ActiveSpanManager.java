@@ -1,13 +1,9 @@
 package io.opentracing.contrib.activespan;
 
-import io.opentracing.NoopSpan;
 import io.opentracing.Span;
-import io.opentracing.contrib.activespan.concurrent.CallableWithActiveSpan;
-import io.opentracing.contrib.activespan.concurrent.RunnableWithActiveSpan;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,29 +11,38 @@ import java.util.logging.Logger;
 /**
  * Manages the <em>active</em> {@link Span}.<br>
  * A {@link Span} becomes active in the current process after a call to {@link #activate(Span)}
- * and can be deactivated again by calling {@link #deactivate(SpanDeactivator)}.
- * <p>
- * The default implementation will use a {@link ThreadLocal ThreadLocal storage} to maintain the active {@link Span}
- * and its parents.
- * <p>
- * Custom implementations can be provided by:
- * <ol>
- * <li>calling {@link #setActiveSpanManager(ActiveSpanManager)} programmatically, or</li>
- * <li>defining a <code>META-INF/services/io.opentracing.contrib.activespan.ActiveSpanManager</code> service file
- * containing the classname of the implementation</li>
- * </ol>
- *
- * @author Sjoerd Talsma
- * @navassoc - activeSpan - io.opentracing.Span
+ * and can be deactivated again by calling {@link SpanDeactivator#deactivate()}.
  */
 public abstract class ActiveSpanManager {
     private static final Logger LOGGER = Logger.getLogger(ActiveSpanManager.class.getName());
     private static final AtomicReference<ActiveSpanManager> INSTANCE = new AtomicReference<ActiveSpanManager>();
 
     /**
-     * Managed object to deactivate an activated {@link Span} with.
+     * Returns the {@linkplain ActiveSpanManager} implementation.
+     * <p>
+     * The default implementation will use a {@link ThreadLocal ThreadLocal storage} to maintain the active {@link Span}
+     * and its parents.
+     * <p>
+     * Custom implementations can be provided by:
+     * <ol>
+     * <li>calling {@link #set(ActiveSpanManager)} programmatically, or</li>
+     * <li>defining a <code>META-INF/services/io.opentracing.contrib.activespan.ActiveSpanManager</code> service file
+     * containing the classname of the implementation</li>
+     * </ol>
+     *
+     * @return The ActiveSpanManager implementation.
      */
-    public interface SpanDeactivator {
+    public static ActiveSpanManager get() {
+        ActiveSpanManager activeSpanManager = INSTANCE.get();
+        if (activeSpanManager == null) {
+            ActiveSpanManager implementation = loadSingleSpiImplementation();
+            while (activeSpanManager == null && implementation != null) { // handle rare race condition
+                INSTANCE.compareAndSet(null, implementation);
+                activeSpanManager = INSTANCE.get();
+            }
+            LOGGER.log(Level.FINE, "ActiveSpanManager implementation: {0}.", activeSpanManager);
+        }
+        return activeSpanManager;
     }
 
     /**
@@ -48,7 +53,7 @@ public abstract class ActiveSpanManager {
      * @param instance The overridden implementation to use for in-process span management.
      * @return Any previous <code>ActiveSpanManager</code> that was initialized before, or <code>null</code>.
      */
-    public static ActiveSpanManager setActiveSpanManager(ActiveSpanManager instance) {
+    public static ActiveSpanManager set(ActiveSpanManager instance) {
         return INSTANCE.getAndSet(instance);
     }
 
@@ -56,160 +61,64 @@ public abstract class ActiveSpanManager {
      * Return the active {@link Span}.
      *
      * @return The active Span, or the <code>NoopSpan</code> if there is no active span.
+     * @see #activeSpan()
      */
-    public static Span activeSpan() {
-        try {
-            Span activeSpan = getInstance().getActiveSpan();
-            if (activeSpan != null) return activeSpan;
-        } catch (Exception activeSpanException) {
-            LOGGER.log(Level.WARNING, "Could not obtain active span.", activeSpanException);
-        }
-        return NoopSpan.INSTANCE;
-    }
+    public abstract Span activeSpan();
 
     /**
      * Makes span the <em>active span</em> within the running process.
-     * <p>
-     * Any exception thrown by the {@link #setActiveSpan(Span) implementation} is logged and will return
-     * no {@link SpanDeactivator} (<code>null</code>) because tracing code must not break application functionality.
      *
      * @param span The span to become the active span.
-     * @return The object that will restore any currently <em>active</em> deactivated, or <code>null</code>.
+     * @return The deactivator to undo the activation.
      * @see #activeSpan()
-     * @see #deactivate(SpanDeactivator)
      */
-    public static SpanDeactivator activate(Span span) {
-        try {
-            if (span == null) span = NoopSpan.INSTANCE;
-            return getInstance().setActiveSpan(span);
-        } catch (Exception activationException) {
-            LOGGER.log(Level.WARNING, "Could not activate {0}.", new Object[]{span, activationException});
-            return null;
-        }
-    }
+    public abstract SpanDeactivator activate(Span span);
 
     /**
-     * Invokes the given {@link SpanDeactivator} which should normally* reactivate the parent of the <em>active span</em>
-     * within the running process.
-     * <p>
-     * Any exception thrown by the implementation is logged and swallowed because tracing code must not break
-     * application functionality.
-     * <p>
-     * <em>*) should normally</em> because the default stack unwinding algorithm is a little more intricate
-     * to deal with out-of-order deactivation.
-     *
-     * @param deactivator The deactivator that was received upon span activation.
-     * @see #activate(Span)
-     */
-    public static void deactivate(SpanDeactivator deactivator) {
-        if (deactivator != null) try {
-            getInstance().deactivateSpan(deactivator);
-        } catch (Exception deactivationException) {
-            LOGGER.log(Level.WARNING, "Could not deactivate {0}.", new Object[]{deactivator, deactivationException});
-        }
-    }
-
-    /**
-     * Deactivates any active span including any active parents.
+     * Deactivates all active spans in the current process which includes any active parents.
      * <p>
      * This method allows boundary filters to deactivate all active spans
-     * before returning control over their Thread, which may end up back in some threadpool.
+     * before returning control over their Thread, which may end up back in some threadpool.<br>
      *
-     * @return <code>true</code> if any spans were deactivated, otherwise <code>false</code>.
+     * @see SpanDeactivator#deactivate()
      */
-    public static boolean deactivateAll() {
-        try {
-            return getInstance().deactivateAllSpans();
-        } catch (Exception clearException) {
-            LOGGER.log(Level.WARNING, "Could not clear active spans.", clearException);
-            return false;
+    public abstract void clear();
+
+//    /**
+//     * Wraps the {@link Callable} to execute with the {@link ActiveSpanManager#activeSpan() active span}
+//     * from the scheduling thread.
+//     *
+//     * @param callable The callable to wrap.
+//     * @param <V>      The return type of the wrapped call.
+//     * @return The wrapped call executing with the active span of the scheduling process.
+//     */
+//    public static <V> CallableWithActiveSpan<V> withActiveSpan(Callable<V> callable) {
+//        return CallableWithActiveSpan.of(callable);
+//    }
+//
+//    /**
+//     * Wraps the {@link Runnable} to execute with the {@link ActiveSpanManager#activeSpan() active span}
+//     * from the scheduling thread.
+//     *
+//     * @param runnable The runnable to wrap.
+//     * @return The wrapped runnable executing with the active span of the scheduling process.
+//     */
+//    public static RunnableWithActiveSpan withActiveSpan(Runnable runnable) {
+//        return RunnableWithActiveSpan.of(runnable);
+//    }
+
+    private static ActiveSpanManager loadSingleSpiImplementation() {
+        // Use the ServiceLoader to find the declared ActiveSpanManager implementation.
+        Iterator<ActiveSpanManager> spiImplementations =
+                ServiceLoader.load(ActiveSpanManager.class, ActiveSpanManager.class.getClassLoader()).iterator();
+        if (spiImplementations.hasNext()) {
+            ActiveSpanManager foundImplementation = spiImplementations.next();
+            if (!spiImplementations.hasNext()) {
+                return foundImplementation;
+            }
+            LOGGER.log(Level.WARNING, "More than one ActiveSpanManager service implementation found. " +
+                    "Falling back to default ThreadLocal implementation.");
         }
+        return new ThreadLocalSpanManager();
     }
-
-    /**
-     * Wraps the {@link Callable} to execute with the {@link ActiveSpanManager#activeSpan() active span}
-     * from the scheduling thread.
-     *
-     * @param callable The callable to wrap.
-     * @param <V>      The return type of the wrapped call.
-     * @return The wrapped call executing with the active span of the scheduling process.
-     */
-    public static <V> CallableWithActiveSpan<V> withActiveSpan(Callable<V> callable) {
-        return CallableWithActiveSpan.of(callable);
-    }
-
-    /**
-     * Wraps the {@link Runnable} to execute with the {@link ActiveSpanManager#activeSpan() active span}
-     * from the scheduling thread.
-     *
-     * @param runnable The runnable to wrap.
-     * @return The wrapped runnable executing with the active span of the scheduling process.
-     */
-    public static RunnableWithActiveSpan withActiveSpan(Runnable runnable) {
-        return RunnableWithActiveSpan.of(runnable);
-    }
-
-    /**
-     * Implementation of the {@link #activeSpan()} method.
-     */
-    protected abstract Span getActiveSpan();
-
-    /**
-     * Implementation of the {@link #activate(Span)} method.
-     */
-    protected abstract SpanDeactivator setActiveSpan(Span span);
-
-    /**
-     * Implementation of the {@link #deactivate(SpanDeactivator)} method.
-     */
-    protected abstract void deactivateSpan(SpanDeactivator deactivator);
-
-    /**
-     * Implementation of the {@link #deactivateAll()} method.
-     */
-    protected abstract boolean deactivateAllSpans();
-
-    /**
-     * Loads a single service implementation from {@link ServiceLoader} or returns the
-     * {@link #setActiveSpanManager(ActiveSpanManager) explicitly configured} manager instance.
-     *
-     * @return The single implementation or the ThreadLocalSpanManager.
-     */
-    private static ActiveSpanManager getInstance() {
-        ActiveSpanManager instance = INSTANCE.get();
-        if (instance == null) {
-            ActiveSpanManager singleton = null;
-
-            // Use the service instance from the ServiceLoader if there is exactly one implementation.
-            for (Iterator<ActiveSpanManager> implementations = ServiceLoader
-                    .load(ActiveSpanManager.class, ActiveSpanManager.class.getClassLoader())
-                    .iterator(); singleton == null && implementations.hasNext(); ) {
-                ActiveSpanManager implementation = implementations.next();
-                if (implementation != null) {
-                    LOGGER.log(Level.FINEST, "Service loaded: {0}.", implementation);
-                    if (implementations.hasNext()) { // Don't load the next implementation but fall-back to default.
-                        LOGGER.log(Level.WARNING, "More than one ActiveSpanManager service implementation found. " +
-                                "Falling back to default implementation.");
-                        break;
-                    } else {
-                        singleton = implementation;
-                    }
-                }
-            }
-
-            if (singleton == null) {
-                LOGGER.log(Level.FINEST, "No ActiveSpanManager service implementation found. " +
-                        "Falling back to default implementation.");
-                singleton = new ThreadLocalSpanManager();
-            }
-
-            while (instance == null) { // deal with race condition (should rarely repeat)
-                INSTANCE.compareAndSet(null, singleton);
-                instance = INSTANCE.get();
-            }
-            LOGGER.log(Level.FINE, "Singleton ActiveSpanManager implementation: {0}.", instance);
-        }
-        return instance;
-    }
-
 }

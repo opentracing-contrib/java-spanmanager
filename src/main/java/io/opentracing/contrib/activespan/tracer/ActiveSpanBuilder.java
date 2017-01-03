@@ -5,6 +5,7 @@ import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.contrib.activespan.ActiveSpanManager;
+import io.opentracing.contrib.activespan.SpanDeactivator;
 
 import java.util.Map;
 
@@ -12,10 +13,9 @@ import java.util.Map;
  * {@link SpanBuilder} that forwards all methods to a delegate.<br>
  * Only the {@link #start()} method is overridden, {@link ActiveSpanManager#activate(Span) activating}
  * the started {@link Span} and wrapping it in an {@link ActiveSpan} object.<br>
- * The {@link ActiveSpan} object {@link ActiveSpanManager.SpanDeactivator deactivates} the span automatically
+ * The {@link ActiveSpan} object {@link SpanDeactivator deactivates} the span automatically
  * when it is {@link ActiveSpan#finish() finished} or {@link ActiveSpan#close() closed}.
  *
- * @author Sjoerd Talsma
  * @see ActiveSpanManager#activate(Span)
  * @see ActiveSpan#finish()
  */
@@ -56,17 +56,14 @@ final class ActiveSpanBuilder implements SpanBuilder {
      */
     @Override
     public Span start() {
-        // Return a new 'active' span that deactivates itself again when finished.
-        final Span newSpan = delegate.start();
-        return new ActiveSpan(newSpan, ActiveSpanManager.activate(newSpan));
+        Span newSpan = delegate.start();
+        return new ActiveSpan(newSpan, ActiveSpanManager.get().activate(newSpan));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.
 
     public SpanBuilder asChildOf(SpanContext parent) {
-        if (parent instanceof ActiveSpanBuilder) {
-            parent = ((ActiveSpanBuilder) parent).delegate;
-        }
+        if (parent instanceof ActiveSpanBuilder) parent = ((ActiveSpanBuilder) parent).delegate;
         return rewrap(delegate.asChildOf(parent));
     }
 
@@ -75,11 +72,9 @@ final class ActiveSpanBuilder implements SpanBuilder {
         return rewrap(delegate.asChildOf(parent));
     }
 
-    public SpanBuilder addReference(String referenceType, SpanContext referencedContext) {
-        if (referencedContext instanceof ActiveSpanBuilder) {
-            referencedContext = ((ActiveSpanBuilder) referencedContext).delegate;
-        }
-        return rewrap(delegate.addReference(referenceType, referencedContext));
+    public SpanBuilder addReference(String referenceType, SpanContext context) {
+        if (context instanceof ActiveSpanBuilder) context = ((ActiveSpanBuilder) context).delegate;
+        return rewrap(delegate.addReference(referenceType, context));
     }
 
     public SpanBuilder withTag(String key, String value) {

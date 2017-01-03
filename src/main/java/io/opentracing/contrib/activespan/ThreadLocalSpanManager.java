@@ -11,13 +11,11 @@ import java.util.logging.Logger;
  * Default ThreadLocal-based implementation of the {@link ActiveSpanManager} class that implements the following
  * stack unwinding algorithm upon deactivation:
  * <ol>
- * <li>If the deactivated <em>managed span</em> is not the active span, the active span is left alone.</li>
- * <li>Otherwise, the first parent that is <em>not yet deactivated</em> is set as the new active span.</li>
- * <li>If no active parents remain, the <em>active span</em> {@link ThreadLocal} is cleared.</li>
+ * <li>If the deactivated <em>managed span</em> is not the ACTIVE span, the ACTIVE span is left alone.</li>
+ * <li>Otherwise, the first parent that is <em>not yet deactivated</em> is set as the new ACTIVE span.</li>
+ * <li>If no ACTIVE parents remain, the <em>ACTIVE span</em> {@link ThreadLocal} is cleared.</li>
  * <li>Consecutive <code>deactivate()</code> calls for already deactivated spans will be ignored.</li>
  * </ol>
- *
- * @author Sjoerd Talsma
  */
 final class ThreadLocalSpanManager extends ActiveSpanManager {
 
@@ -27,29 +25,22 @@ final class ThreadLocalSpanManager extends ActiveSpanManager {
     ThreadLocalSpanManager() {
     }
 
-    public Span getActiveSpan() {
+    @Override
+    public Span activeSpan() {
         final ManagedSpan activeSpan = ACTIVE.get();
         return activeSpan != null ? activeSpan.span : NoopSpan.INSTANCE;
     }
 
-    public SpanDeactivator setActiveSpan(Span span) {
-        final ManagedSpan managedSpan = new ManagedSpan(span);
+    @Override
+    public SpanDeactivator activate(Span span) {
+        ManagedSpan managedSpan = new ManagedSpan(span);
         ACTIVE.set(managedSpan);
         return managedSpan;
     }
 
-    public void deactivateSpan(SpanDeactivator deactivator) {
-        if (!(deactivator instanceof ManagedSpan)) {
-            throw new IllegalArgumentException(
-                    "Cannot deactivate " + deactivator + ". It was not issued by this ActiveSpanManager!");
-        }
-        ((ManagedSpan) deactivator).deactivate();
-    }
-
-    public boolean deactivateAllSpans() {
-        boolean deactivated = ACTIVE.get() != null;
+    @Override
+    public void clear() {
         ACTIVE.remove();
-        return deactivated;
     }
 
     @Override
@@ -66,7 +57,12 @@ final class ThreadLocalSpanManager extends ActiveSpanManager {
             this.span = span;
         }
 
-        private void deactivate() {
+        @Override
+        public Span getSpan() {
+            return span;
+        }
+
+        public void deactivate() {
             if (deactivated.compareAndSet(false, true)) {
                 ManagedSpan current = ACTIVE.get();
                 if (this == current) {
@@ -75,15 +71,20 @@ final class ThreadLocalSpanManager extends ActiveSpanManager {
                     }
                     if (current == null) ACTIVE.remove();
                     else ACTIVE.set(current);
-                    LOGGER.log(Level.FINER, "Deactivated {0} and restored active span to {1}.",
+                    LOGGER.log(Level.FINER, "Deactivated {0} and restored ACTIVE span to {1}.",
                             new Object[]{this, current});
                 } else {
-                    LOGGER.log(Level.FINE, "Deactivated {0} without affecting active span {1}.",
+                    LOGGER.log(Level.FINE, "Deactivated {0} without affecting ACTIVE span {1}.",
                             new Object[]{this, current});
                 }
             } else {
                 LOGGER.log(Level.FINEST, "No action needed, {0} was already deactivated.", this);
             }
+        }
+
+        @Override
+        public void close() {
+            deactivate();
         }
 
         @Override

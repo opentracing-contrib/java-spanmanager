@@ -4,12 +4,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.opentracing.contrib.activespan.concurrent.SpanAwareExecutorService.wrap;
-
-/**
- * @author Sjoerd Talsma
- * @navassoc - delegatesTo - Executors
- */
 public final class SpanAwareExecutors {
 
     /**
@@ -27,8 +21,8 @@ public final class SpanAwareExecutors {
      * @return the newly created thread pool
      * @see Executors#newFixedThreadPool(int)
      */
-    public static ExecutorService newFixedThreadPool(int nThreads) {
-        return wrap(Executors.newFixedThreadPool(nThreads));
+    public static SpanAwareExecutorService newFixedThreadPool(int nThreads) {
+        return SpanAwareExecutorService.wrap(Executors.newFixedThreadPool(nThreads));
     }
 
     /**
@@ -40,8 +34,8 @@ public final class SpanAwareExecutors {
      * @return the newly created thread pool
      * @see Executors#newFixedThreadPool(int, ThreadFactory)
      */
-    public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
-        return wrap(Executors.newFixedThreadPool(nThreads, threadFactory));
+    public static SpanAwareExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
+        return SpanAwareExecutorService.wrap(Executors.newFixedThreadPool(nThreads, threadFactory));
     }
 
     /**
@@ -51,8 +45,8 @@ public final class SpanAwareExecutors {
      * @return the newly created single-theaded executor
      * @see Executors#newSingleThreadExecutor()
      */
-    public static ExecutorService newSingleThreadExecutor() {
-        return wrap(Executors.newSingleThreadExecutor());
+    public static SpanAwareExecutorService newSingleThreadExecutor() {
+        return SpanAwareExecutorService.wrap(Executors.newSingleThreadExecutor());
     }
 
     /**
@@ -63,8 +57,8 @@ public final class SpanAwareExecutors {
      * @return the newly created single-theaded executor
      * @see Executors#newSingleThreadExecutor(ThreadFactory)
      */
-    public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return wrap(Executors.newSingleThreadExecutor(threadFactory));
+    public static SpanAwareExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
+        return SpanAwareExecutorService.wrap(Executors.newSingleThreadExecutor(threadFactory));
     }
 
     /**
@@ -74,8 +68,8 @@ public final class SpanAwareExecutors {
      * @return the newly created thread pool
      * @see Executors#newCachedThreadPool()
      */
-    public static ExecutorService newCachedThreadPool() {
-        return wrap(Executors.newCachedThreadPool());
+    public static SpanAwareExecutorService newCachedThreadPool() {
+        return SpanAwareExecutorService.wrap(Executors.newCachedThreadPool());
     }
 
     /**
@@ -86,8 +80,8 @@ public final class SpanAwareExecutors {
      * @return the newly created thread pool
      * @see Executors#newCachedThreadPool(ThreadFactory)
      */
-    public static ExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
-        return wrap(Executors.newCachedThreadPool(threadFactory));
+    public static SpanAwareExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
+        return SpanAwareExecutorService.wrap(Executors.newCachedThreadPool(threadFactory));
     }
 
 }

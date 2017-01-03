@@ -2,15 +2,13 @@ package io.opentracing.contrib.activespan.concurrent;
 
 import io.opentracing.Span;
 import io.opentracing.contrib.activespan.ActiveSpanManager;
-import io.opentracing.contrib.activespan.ActiveSpanManager.SpanDeactivator;
+import io.opentracing.contrib.activespan.SpanDeactivator;
 
 import java.util.concurrent.Callable;
 
 /**
  * {@link Callable} wrapper that will execute with the {@link ActiveSpanManager#activeSpan() active span}
  * from the scheduling thread.
- *
- * @author Sjoerd Talsma
  */
 public class CallableWithActiveSpan<T> implements Callable<T> {
 
@@ -33,7 +31,7 @@ public class CallableWithActiveSpan<T> implements Callable<T> {
      * @see ActiveSpanManager#activeSpan()
      */
     public static <T> CallableWithActiveSpan<T> of(Callable<T> delegate) {
-        return new CallableWithActiveSpan<T>(delegate, ActiveSpanManager.activeSpan());
+        return new CallableWithActiveSpan<T>(delegate, ActiveSpanManager.get().activeSpan());
     }
 
     /**
@@ -57,11 +55,11 @@ public class CallableWithActiveSpan<T> implements Callable<T> {
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        final SpanDeactivator parentContext = ActiveSpanManager.activate(activeSpanOfScheduler);
+        final SpanDeactivator deactivator = ActiveSpanManager.get().activate(activeSpanOfScheduler);
         try {
             return delegate.call();
-        } finally {
-            ActiveSpanManager.deactivate(parentContext);
+        } finally { // TODO: error handling (preferably using Guava's Closer)
+            deactivator.deactivate();
         }
     }
 

@@ -1,7 +1,7 @@
-package io.opentracing.contrib.activespan.concurrent;
+package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
-import io.opentracing.contrib.activespan.ActiveSpanManager;
+import io.opentracing.contrib.spanmanager.ActiveSpanManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * {@link ExecutorService} wrapper that will propagate the {@link ActiveSpanManager#activeSpan() active span}
+ * {@link ExecutorService} wrapper that propagates the {@link ActiveSpanManager#currentSpan() currently active span}
  * into the calls that are scheduled.
  */
 public class SpanAwareExecutorService implements ExecutorService {
@@ -69,7 +69,7 @@ public class SpanAwareExecutorService implements ExecutorService {
     protected <T> Collection<? extends Callable<T>> spanAwareTasks(final Collection<? extends Callable<T>> tasks) {
         if (tasks == null) throw new NullPointerException("Collection of scheduled tasks is <null>.");
         Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
-        Span activeSpan = ActiveSpanManager.get().activeSpan();
+        Span activeSpan = ActiveSpanManager.get().currentSpan();
         for (Callable<T> task : tasks) {
             result.add(new CallableWithActiveSpan<T>(task, activeSpan));
         }

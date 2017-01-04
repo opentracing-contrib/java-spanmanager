@@ -1,9 +1,21 @@
-package io.opentracing.contrib.activespan.concurrent;
+package io.opentracing.contrib.spanmanager.concurrent;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+/**
+ * Factory-methods similar to standard java {@link Executors}:
+ * <ul>
+ * <li>{@link #newFixedThreadPool(int)}</li>
+ * <li>{@link #newSingleThreadExecutor()}</li>
+ * <li>{@link #newCachedThreadPool()}</li>
+ * <li>Variants of the above with additional {@link ThreadFactory} argument:
+ * {@link #newFixedThreadPool(int, ThreadFactory)},
+ * {@link #newSingleThreadExecutor(ThreadFactory)},
+ * {@link #newCachedThreadPool(ThreadFactory)}
+ * </li>
+ * </ul>
+ */
 public final class SpanAwareExecutors {
 
     /**

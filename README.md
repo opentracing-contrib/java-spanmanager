@@ -1,60 +1,66 @@
 # java-activespan
 
-This library provides a way to manage an _active span_ within the current process
-and propagate it to other threads.
+This library provides a way to manage a _current span_ within and propagate it to other threads.
+
+## SpanManager
+
+The core of this library, this interface defines
+ 1. The `currentSpan()` method to return the _currently managed span_.
+ 2. The `manage(Span)` method to make the specified `Span` the currently managed span.
+    A `ManagedSpan` instance is returned to release this _currently managed span_.
+ 3. The `clear()` method to releases all managed spans including any parents.
+
+## ManagedSpan
+
+Obtained from the `SpanManager`, this object can be used to 
+release the _currently managed span_ again.
+ 1. The `getSpan()` method returns the managed `Span` object.
+ 2. The `release()` method 'unmanages' the span.  
+    Implementors are encouraged to restore the managed span as it was before,
+    providing stack-like behaviour.  
+    It must be possible to repeatedly call `release()` without side effects.
+ 3. `ManagedSpan` extends `Closeable` where `close()` is an alias for `release()`
+    so it can reliably be used in `try-with-resources` blocks.  
+    **Please note:** _Closing a ManagedSpan does **not** automatically finish the actual span._  
+    (with the `ManagedSpanTracer` being an exception to this rule)
 
 ## ActiveSpanManager
 
-The core of this library, this class provides
- 1. The `activeSpan()` method to return the _active span_ in the current process.   
-    If there is no active span, a `NoopSpan` is returned instead.
- 2. The _active span_ can be set through the `activate()` method,
-    returning a `SpanDeactivator`.
- 3. Method `clear()` to deactivate _all active spans_ in a process, including any active parents.
-    Not intended for 'regular' use, this method is available for boundary filters, 
-    making sure all spans are cleared before the current process is repurposed by a threadpool. 
-
-## SpanDeactivator
-
-Returned by `ActiveSpanManager.activate()` this object can `deactivate()` a 
-previously activated `Span` again.
-It implements `Closeable` for easy use in try-with-resources blocks.
+Provides the `ActiveSpanManager.get()` method that returns the singleton _active span manager_.  
+Upon first use of this manager, it lazily determines which `SpanManager` implementation to use:
+ 1. If an explicitly configured `SpanManager` was provided via the `ActiveSpanManager.set()` method,
+    that will always take precedence over automatically resolved manager instances.
+ 2. A `SpanManager` implementation can be automatically provided using the java `ServiceLoader` through the
+    `META-INF/services/io.opentracing.contrib.spanmanager.SpanManager` service definition file.
+    The ActiveSpanManager class will not attempt to choose between implementations;
+    if more than one is found, a warning is logged and the default implementation is used:
+ 3. If no `SpanManager` is found, a default implementation is used,
+    providing `ThreadLocal` storage to manage the active span.
 
 ## Concurrency
 
 ### SpanAwareExecutorService
 
-This `ExecutorService` wraps an existing threadpool and propagates the _active span_
+This `ExecutorService` wraps an existing threadpool and propagates the currently active span
 of the caller into the tasks it executes.  
-No `Spans` are started or finished automatically by this executor.  
-Convenience variants of the java `Executors` factory methods are provided by the `SpanAwareExecutors` class:
+Please note: This ExecutorService does not automatically start or finish spans,
+but merely propagates the _currently active_ span into the jobs being executed.
+
+### SpanAwareExecutors
+
+Factory-methods similar to standard java `Executors`:  
  - `SpanAwareExecutors.newFixedThreadPool(int)`
  - `SpanAwareExecutors.newSingleThreadExecutor()`
  - `SpanAwareExecutors.newCachedThreadPool()`
  - Variants of the above with additional `ThreadFactory` argument.
 
-### ActiveSpanTracer
+### ManagedSpanTracer
 
-This `Tracer` makes managing the _active span_ easier.
- 1. It is a _wrapper_ that forwards all calls to another `Tracer` implementation.
- 2. `Span` instances created with this tracer are automatically 
-    _activated_ when started and _deactivated_ when finished.
- 3. The `SpanBuilder` of this tracer will short-circuit to the `NoopSpanBuilder`.
-    This means any `NoopSpan` instances created do not automatically become the active span.
-
-## Custom span managers
-
-It is possible to provide a custom implementation of `ActiveSpanManager`.
-This may be useful if you already have a method in place to propagate contextual information
-from one thread to another. Creating a custom manager is one way to piggyback the _active span_ on
-your existing propagation mechanism. Another way would be to call _activate_ and _deactivate_
-at the appropriate moments in your propagation mechanism.  
-
-To enable a custom manager:
- 1. Programmatically, call the `ActiveSpanManager.set()` with the new implementation.
- 2. Using the standard Java `ServiceLoader`, bundle a 
-    `META-INF/services/io.opentracing.contrib.activespan.ActiveSpanManager` service file
-    containing the classname of the implementation.
+This convenience `Tracer` automates managing the _active span_:
+ 1. It is a wrapper that forwards all calls to another `Tracer` implementation.
+ 2. `Span` instances created with this tracer are managed when started
+    (automatically becoming the currently active span)
+    and released when finished.
 
 ## Examples
 

@@ -1,35 +1,31 @@
-package io.opentracing.contrib.activespan.tracer;
+package io.opentracing.contrib.spanmanager.tracer;
 
 import io.opentracing.NoopSpanBuilder;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
-import io.opentracing.contrib.activespan.ActiveSpanManager;
-import io.opentracing.contrib.activespan.SpanDeactivator;
+import io.opentracing.contrib.spanmanager.ActiveSpanManager;
+import io.opentracing.contrib.spanmanager.ManagedSpan;
 
 import java.util.Map;
 
 /**
  * {@link SpanBuilder} that forwards all methods to a delegate.<br>
- * Only the {@link #start()} method is overridden, {@link ActiveSpanManager#activate(Span) activating}
- * the started {@link Span} and wrapping it in an {@link ActiveSpan} object.<br>
- * The {@link ActiveSpan} object {@link SpanDeactivator deactivates} the span automatically
- * when it is {@link ActiveSpan#finish() finished} or {@link ActiveSpan#close() closed}.
+ * The {@link #start()} method is overridden to automatically {@link ActiveSpanManager#manage(Span) manage}
+ * the started {@link Span}, wrapping it in an {@link AutoReleasingManagedSpan} object.<br>
+ * The {@link AutoReleasingManagedSpan} object {@link ManagedSpan#release() releases} the span automatically
+ * when it is {@link Span#finish() finished} or {@link Span#close() closed}.
  *
- * @see ActiveSpanManager#activate(Span)
- * @see ActiveSpan#finish()
+ * @see ActiveSpanManager#manage(Span)
+ * @see AutoReleasingManagedSpan#finish()
  */
-final class ActiveSpanBuilder implements SpanBuilder {
+final class ManagedSpanBuilder implements SpanBuilder {
 
     protected SpanBuilder delegate;
 
-    private ActiveSpanBuilder(SpanBuilder delegate) {
+    ManagedSpanBuilder(SpanBuilder delegate) {
         if (delegate == null) throw new NullPointerException("Delegate SpanBuilder was <null>.");
         this.delegate = delegate;
-    }
-
-    static SpanBuilder of(SpanBuilder spanBuilder) {
-        return spanBuilder instanceof NoopSpanBuilder ? spanBuilder : new ActiveSpanBuilder(spanBuilder);
     }
 
     /**
@@ -42,38 +38,38 @@ final class ActiveSpanBuilder implements SpanBuilder {
      * @return Either this re-wrapped ActiveSpanBuilder or the NoopSpanBuilder.
      */
     SpanBuilder rewrap(SpanBuilder spanBuilder) {
-        if (spanBuilder == null || spanBuilder instanceof NoopSpanBuilder) return NoopSpanBuilder.INSTANCE;
-        this.delegate = spanBuilder;
+        if (spanBuilder != null) this.delegate = spanBuilder;
         return this;
     }
 
     /**
-     * Starts the built Span and {@link ActiveSpanManager#activate(Span) activates} it.
+     * Starts the built Span and {@link ActiveSpanManager#manage(Span) activates} it.
      *
-     * @return a new 'active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
-     * @see ActiveSpan#finish()
-     * @see ActiveSpanManager#activate(Span)
+     * @return a new 'currently active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
+     * @see ActiveSpanManager#manage(Span)
+     * @see AutoReleasingManagedSpan#release()
      */
     @Override
     public Span start() {
         Span newSpan = delegate.start();
-        return new ActiveSpan(newSpan, ActiveSpanManager.get().activate(newSpan));
+        // TODO: Do we want to make NoopSpan instances managed?
+        return new AutoReleasingManagedSpan(ActiveSpanManager.get().manage(newSpan));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.
 
     public SpanBuilder asChildOf(SpanContext parent) {
-        if (parent instanceof ActiveSpanBuilder) parent = ((ActiveSpanBuilder) parent).delegate;
+        if (parent instanceof ManagedSpanBuilder) parent = ((ManagedSpanBuilder) parent).delegate;
         return rewrap(delegate.asChildOf(parent));
     }
 
     public SpanBuilder asChildOf(Span parent) {
-        if (parent instanceof ActiveSpan) parent = ((ActiveSpan) parent).delegate;
+        if (parent instanceof ManagedSpan) parent = ((ManagedSpan) parent).getSpan();
         return rewrap(delegate.asChildOf(parent));
     }
 
     public SpanBuilder addReference(String referenceType, SpanContext context) {
-        if (context instanceof ActiveSpanBuilder) context = ((ActiveSpanBuilder) context).delegate;
+        if (context instanceof ManagedSpanBuilder) context = ((ManagedSpanBuilder) context).delegate;
         return rewrap(delegate.addReference(referenceType, context));
     }
 

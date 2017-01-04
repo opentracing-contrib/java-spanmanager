@@ -1,13 +1,13 @@
-package io.opentracing.contrib.activespan.concurrent;
+package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
-import io.opentracing.contrib.activespan.ActiveSpanManager;
-import io.opentracing.contrib.activespan.SpanDeactivator;
+import io.opentracing.contrib.spanmanager.ActiveSpanManager;
+import io.opentracing.contrib.spanmanager.ManagedSpan;
 
 import java.util.concurrent.Callable;
 
 /**
- * {@link Callable} wrapper that will execute with the {@link ActiveSpanManager#activeSpan() active span}
+ * {@link Callable} wrapper that will execute with the {@link ActiveSpanManager#currentSpan() currently active span}
  * from the scheduling thread.
  */
 public class CallableWithActiveSpan<T> implements Callable<T> {
@@ -22,26 +22,27 @@ public class CallableWithActiveSpan<T> implements Callable<T> {
     }
 
     /**
-     * Creates a new callable that will execute with the {@link ActiveSpanManager#activeSpan() active span}
+     * Creates a new callable that will execute with the {@link ActiveSpanManager#currentSpan() currently active span}
      * from the scheduling thread.
      *
      * @param delegate The delegate callable to execute (required, non-<code>null</code>).
      * @param <T>      The result type of the call.
      * @return The 'span aware' callable that will propagate the currently active span to the new thread.
-     * @see ActiveSpanManager#activeSpan()
+     * @see ActiveSpanManager#currentSpan()
      */
     public static <T> CallableWithActiveSpan<T> of(Callable<T> delegate) {
-        return new CallableWithActiveSpan<T>(delegate, ActiveSpanManager.get().activeSpan());
+        return new CallableWithActiveSpan<T>(delegate, ActiveSpanManager.get().currentSpan());
     }
 
     /**
-     * This method allows the caller to override the active span in the new thread.
+     * This method allows the caller to override the active span for the new thread.
      * <p>
-     * <em>Please note:</em> it is <strong>not</strong> necessary to call this method with the
-     * {@link ActiveSpanManager#activeSpan() current active span} as that will be used {@link #of(Callable) by default}.
+     * <em>Please note:</em> it is <strong>not necessary</strong> to call this method with the
+     * {@link ActiveSpanManager#currentSpan() currently active span} since
+     * that will be used {@link #of(Callable) by default}.
      *
      * @param activeSpan The span to become the active span when calling the delegate.
-     * @return A new runnable object that will propagate the parent span to another thread.
+     * @return A new runnable object that will propagate the active span to the thread executing the call.
      * @see #of(Callable)
      */
     public CallableWithActiveSpan<T> withActiveSpan(Span activeSpan) {
@@ -49,17 +50,17 @@ public class CallableWithActiveSpan<T> implements Callable<T> {
     }
 
     /**
-     * Performs the delegate call with the specified parent span.
+     * Performs the delegate call with the specified active span.
      *
      * @return The result from the original call.
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        final SpanDeactivator deactivator = ActiveSpanManager.get().activate(activeSpanOfScheduler);
+        final ManagedSpan managedSpan = ActiveSpanManager.get().manage(activeSpanOfScheduler);
         try {
             return delegate.call();
-        } finally { // TODO: error handling (preferably using Guava's Closer)
-            deactivator.deactivate();
+        } finally { // TODO: simulate try-with-resources (preferably using Guava's Closer)
+            managedSpan.release();
         }
     }
 

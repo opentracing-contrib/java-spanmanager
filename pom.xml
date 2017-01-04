@@ -6,14 +6,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Artifact identification -->
-    <groupId>io.opentracing.contrib.activespan</groupId>
-    <artifactId>opentracing-activespan</artifactId>
+    <groupId>io.opentracing.contrib.spanmanager</groupId>
+    <artifactId>opentracing-spanmanager</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <!-- Project information -->
-    <name>In-process active span propagation.</name>
-    <description>Library for propagating the active span accross threads.</description>
+    <name>SpanManager library.</name>
+    <description>Library for managing the currently active span and propagating it accross threads.</description>
     <url>https://github.com/opentracing-contrib/java-activespan</url>
     <inceptionYear>2016</inceptionYear>
 
@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <build.java.version>1.6</build.java.version>
-        <opentracing-api.version>0.20.2</opentracing-api.version>
+        <opentracing-api.version>0.20.7</opentracing-api.version>
     </properties>
 
     <dependencies>

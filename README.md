@@ -1,6 +1,6 @@
 # java-activespan
 
-This library provides a way to manage a _current span_ within and propagate it to other threads.
+This library provides a way to manage a _current span_ and propagate it to other threads.
 
 ## SpanManager
 

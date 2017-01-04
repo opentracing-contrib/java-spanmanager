@@ -26,54 +26,37 @@ public class SpanAwareExecutorService implements ExecutorService {
     }
 
     public void execute(Runnable command) {
-        delegate.execute(RunnableWithActiveSpan.of(command));
+        delegate.execute(spanAware(command));
     }
 
     public Future<?> submit(Runnable task) {
-        return delegate.submit(RunnableWithActiveSpan.of(task));
+        return delegate.submit(spanAware(task));
     }
 
     public <T> Future<T> submit(Runnable task, T result) {
-        return delegate.submit(RunnableWithActiveSpan.of(task), result);
+        return delegate.submit(spanAware(task), result);
     }
 
     public <T> Future<T> submit(Callable<T> task) {
-        return delegate.submit(CallableWithActiveSpan.of(task));
+        return delegate.submit(spanAware(task));
     }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        return delegate.invokeAll(spanAwareTasks(tasks));
+        return delegate.invokeAll(spanAware(tasks));
     }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        return delegate.invokeAll(spanAwareTasks(tasks), timeout, unit);
+        return delegate.invokeAll(spanAware(tasks), timeout, unit);
     }
 
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        return delegate.invokeAny(spanAwareTasks(tasks));
+        return delegate.invokeAny(spanAware(tasks));
     }
 
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return delegate.invokeAny(spanAwareTasks(tasks), timeout, unit);
-    }
-
-    /**
-     * Wraps {@link CallableWithActiveSpan} objects.
-     *
-     * @param tasks The tasks to be scheduled.
-     * @param <T>   The common type of all scheduled tasks.
-     * @return A new collection of 'span aware' callable objects that run with the active span of the scheduling service.
-     */
-    protected <T> Collection<? extends Callable<T>> spanAwareTasks(final Collection<? extends Callable<T>> tasks) {
-        if (tasks == null) throw new NullPointerException("Collection of scheduled tasks is <null>.");
-        Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
-        Span activeSpan = ActiveSpanManager.get().currentSpan();
-        for (Callable<T> task : tasks) {
-            result.add(new CallableWithActiveSpan<T>(task, activeSpan));
-        }
-        return result;
+        return delegate.invokeAny(spanAware(tasks), timeout, unit);
     }
 
     public void shutdown() {
@@ -94,6 +77,24 @@ public class SpanAwareExecutorService implements ExecutorService {
 
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
         return delegate.awaitTermination(timeout, unit);
+    }
+
+    private static Runnable spanAware(Runnable runnable) {
+        return new RunnableWithActiveSpan(runnable, ActiveSpanManager.get().currentSpan());
+    }
+
+    private static <T> Callable<T> spanAware(Callable<T> callable) {
+        return new CallableWithActiveSpan<T>(callable, ActiveSpanManager.get().currentSpan());
+    }
+
+    private static <T> Collection<? extends Callable<T>> spanAware(final Collection<? extends Callable<T>> tasks) {
+        if (tasks == null) throw new NullPointerException("Collection of scheduled tasks is <null>.");
+        Span activeSpan = ActiveSpanManager.get().currentSpan();
+        Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
+        for (Callable<T> task : tasks) {
+            result.add(new CallableWithActiveSpan<T>(task, activeSpan));
+        }
+        return result;
     }
 
 }

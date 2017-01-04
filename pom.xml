@@ -12,8 +12,8 @@
     <packaging>jar</packaging>
 
     <!-- Project information -->
-    <name>SpanManager library.</name>
-    <description>Library for managing the currently active span and propagating it accross threads.</description>
+    <name>SpanManager library</name>
+    <description>Library for managing the currently active span and propagating it accross threads</description>
     <url>https://github.com/opentracing-contrib/java-activespan</url>
     <inceptionYear>2016</inceptionYear>
 

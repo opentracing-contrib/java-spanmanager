@@ -8,16 +8,17 @@ import io.opentracing.contrib.spanmanager.ManagedSpan;
 import io.opentracing.propagation.Format;
 
 /**
- * Convenience {@link Tracer} that automates managing the {@linkplain ActiveSpanManager#currentSpan() active span}:
+ * Convenience {@link Tracer} that automates managing the {@linkplain ActiveSpanManager#activeSpan() active span}:
  * <ol>
  * <li>It is a wrapper that forwards all calls to another {@link Tracer} implementation.</li>
- * <li>{@link Span} instances created with this tracer are {@link ActiveSpanManager#manage(Span) managed} when started
- * (automatically becoming the {@link ActiveSpanManager#currentSpan() currently active span})
- * </li>
- * <li>and {@link ManagedSpan#release() released} when finished.</li>
+ * <li>{@linkplain Span Spans} created with this tracer are
+ * automatically {@link ActiveSpanManager#activate(Span) activated} when started,</li>
+ * <li>and automatically {@link ManagedSpan#release() released} when they finish.</li>
  * </ol>
+ *
+ * @see ActiveSpanManager
  */
-public class ManagedSpanTracer implements Tracer {
+public final class ManagedSpanTracer implements Tracer {
 
     protected final Tracer delegate;
 
@@ -27,7 +28,7 @@ public class ManagedSpanTracer implements Tracer {
     }
 
     public <C> void inject(SpanContext spanContext, Format<C> format, C carrier) {
-        // Weird that Builder extends Context!
+        // Weird that SpanBuilder extends Context!
         if (spanContext instanceof ManagedSpanBuilder) spanContext = ((ManagedSpanBuilder) spanContext).delegate;
         delegate.inject(spanContext, format, carrier);
     }
@@ -42,7 +43,7 @@ public class ManagedSpanTracer implements Tracer {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{delegate=" + delegate + '}';
+        return "ManagedSpanTracer{" + delegate + '}';
     }
 
 }

@@ -7,8 +7,9 @@ import io.opentracing.contrib.spanmanager.ManagedSpan;
 import java.util.concurrent.Callable;
 
 /**
- * {@link Callable} wrapper that will execute with the {@link ActiveSpanManager#currentSpan() currently active span}
- * from the scheduling thread.
+ * {@link Callable} wrapper that will execute with a custom active span specified from the scheduling thread.
+ *
+ * @see ActiveSpanManager
  */
 final class CallableWithActiveSpan<T> implements Callable<T> {
 
@@ -28,7 +29,7 @@ final class CallableWithActiveSpan<T> implements Callable<T> {
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        final ManagedSpan managedSpan = ActiveSpanManager.get().manage(activeSpanOfScheduler);
+        final ManagedSpan managedSpan = ActiveSpanManager.activate(activeSpanOfScheduler);
         try {
             return delegate.call();
         } finally { // TODO: simulate try-with-resources (preferably using Guava's Closer)

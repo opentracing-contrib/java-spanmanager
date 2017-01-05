@@ -1,5 +1,6 @@
 package io.opentracing.contrib.spanmanager;
 
+import io.opentracing.NoopSpan;
 import io.opentracing.Span;
 
 import java.util.Iterator;
@@ -9,121 +10,98 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Manages the <em>currently active</em> {@link Span}.<br>
- * A {@link Span} becomes active in the current process after a call to {@link #manage(Span)}
- * and can be deactivated again by calling {@link ManagedSpan#release()}.
+ * Static utility to access the <em>currently active</em> {@link Span}.
+ * <p>
+ * The {@link SpanManager} responsible for managing the <em>currently active</em> span is lazily resolved:
+ * <ol type="a">
+ * <li>The last-{@link #register(SpanManager) registered} span manager always takes precedence.</li>
+ * <li>If no manager was registered, one is looked up from the {@link ServiceLoader}.<br>
+ * The ActiveSpanManager will not attempt to choose between implementations:</li>
+ * <li>If no single implementation is found, a default implementation will be used.</li>
+ * </ol>
+ * <p>
+ * The {@linkplain ThreadLocalSpanManager default implementation} uses {@link ThreadLocal} storage,
+ * maintaining a stack-like structure of linked managed spans.
+ *
+ * @see io.opentracing.contrib.spanmanager.concurrent.SpanPropagatingExecutors
+ * @see io.opentracing.contrib.spanmanager.concurrent.SpanPropagatingExecutorService
  */
-public final class ActiveSpanManager implements SpanManager {
+public final class ActiveSpanManager {
     private static final Logger LOGGER = Logger.getLogger(ActiveSpanManager.class.getName());
 
     /**
-     * Singleton instance.
+     * The resolved {@link SpanManager} to delegate the implementation to.
      * <p>
-     * Since we cannot prevent people using {@linkplain #get() ActiveSpanManager.get()} as a constant,
-     * this guarantees that references obtained before, during or after initialization
-     * all behave as if obtained <em>after</em> initialization once properly initialized.<br>
-     * As a minor additional benefit it makes it harder to circumvent the {@link SpanManager} API.
+     * This can be an {@link #register(SpanManager) explicitly registered delegate}
+     * or an {@link #loadSingleSpiImplementation() automatically resolved SpanManager service},
+     * (or <code>null</code> during initialization).
      */
-    private static final ActiveSpanManager INSTANCE = new ActiveSpanManager();
-
-    /**
-     * The resolved {@link SpanManager} to delegate the implementation to.<br>
-     * This can be either an {@link #set(SpanManager) explicitly set delegate}
-     * or the automatically resolved service implementation.
-     */
-    private final AtomicReference<SpanManager> activeSpanManager = new AtomicReference<SpanManager>();
+    private static final AtomicReference<SpanManager> ACTIVE_SPAN_MANAGER = new AtomicReference<SpanManager>();
 
     private ActiveSpanManager() {
+        throw new UnsupportedOperationException();
     }
 
-    private SpanManager lazySpanManager() {
-        SpanManager instance = this.activeSpanManager.get();
-        if (instance == null) {
-            final SpanManager singleton = loadSingleSpiImplementation();
-            while (instance == null && singleton != null) { // handle rare race condition
-                this.activeSpanManager.compareAndSet(null, singleton);
-                instance = this.activeSpanManager.get();
+    private static SpanManager lazySpanManager() {
+        SpanManager spanManager = ACTIVE_SPAN_MANAGER.get();
+        if (spanManager == null) {
+            final SpanManager resolved = loadSingleSpiImplementation();
+            while (spanManager == null && resolved != null) { // handle rare race condition
+                ACTIVE_SPAN_MANAGER.compareAndSet(null, resolved);
+                spanManager = ACTIVE_SPAN_MANAGER.get();
             }
-            LOGGER.log(Level.INFO, "Using ActiveSpanManager implementation: {0}.", instance);
+            LOGGER.log(Level.INFO, "Using SpanManager implementation: {0}.", spanManager);
         }
-        return instance;
+        return spanManager;
     }
 
     /**
-     * Returns the {@linkplain SpanManager} instance.
-     * Upon first use of any method, this manager lazily determines which actual {@link SpanManager} implementation
-     * to use:
-     * <ol type="a">
-     * <li>If an explicitly configured manager was provided via the {@link #set(SpanManager)} method,
-     * that will always take precedence over automatically resolved instances.</li>
-     * <li>An implementation can automatically be provided using the Java {@link ServiceLoader} through the
-     * <code>META-INF/services/io.opentracing.contrib.spanmanager.SpanManager</code> service definition file.<br>
-     * The {@link ActiveSpanManager} will not attempt to choose between implementations;
-     * if more than one is found by the {@linkplain ServiceLoader service loader},
-     * a warning is logged and tracing is disabled by falling back to the default implementation:</li>
-     * <li>If no tracer implementation is available, a default {@link ThreadLocal} based implementation is used.</li>
-     * </ol>
-     *
-     * @return The active SpanManager.
-     */
-    public static SpanManager get() {
-        return INSTANCE;
-    }
-
-    /**
-     * Programmatically sets a <code>SpanManager</code> implementation as <em>the</em> singleton instance.
+     * Explicitly configures a <code>SpanManager</code> to back the behaviour of the {@link ActiveSpanManager}.
      * <p>
      * The previous manager is returned so it can be:
      * <ul>
-     * <li>{@link #clear() cleared} as it no longer is the active manager, or</li>
+     * <li>{@link SpanManager#clear() cleared} as it no longer is the active manager, or</li>
      * <li>restored later, for example in a testing situation</li>
      * </ul>
      *
-     * @param spanManager The overridden implementation to use for in-process span management.
-     * @return The previous <code>SpanManager</code>, or <code>null</code> if there was none.
+     * @param spanManager Manager for in-process span propagation.
+     * @return The previously active SpanManager, or <code>null</code> if there was none.
      */
-    public static SpanManager set(SpanManager spanManager) {
-        if (spanManager instanceof ActiveSpanManager) {
-            LOGGER.log(Level.FINE, "Attempted to set the ActiveSpanManager as delegate of itself.");
-            return INSTANCE.activeSpanManager.get(); // no-op, return 'previous' manager.
-        }
-        return INSTANCE.activeSpanManager.getAndSet(spanManager);
+    public static SpanManager register(SpanManager spanManager) {
+        SpanManager previous = ACTIVE_SPAN_MANAGER.getAndSet(spanManager);
+        LOGGER.log(Level.INFO, "Registered ActiveSpanManager {0} (previously {1}).", new Object[]{spanManager, previous});
+        return previous;
     }
 
     /**
-     * Return the currently active {@link Span}.
+     * Return the active {@link Span} in the current process.
      *
      * @return The currently active Span, or the <code>NoopSpan</code> if there is no active span.
-     * @see SpanManager#manage(Span)
+     * @see SpanManager#currentSpan()
      */
-    @Override
-    public Span currentSpan() {
-        return lazySpanManager().currentSpan();
+    public static Span activeSpan() {
+        Span activeSpan = lazySpanManager().currentSpan();
+        return activeSpan != null ? activeSpan : NoopSpan.INSTANCE;
     }
 
     /**
-     * Makes span the <em>currently active span</em> within the running process.
+     * Makes span the <em>active span</em> for the current process.
      *
-     * @param span The span to become the active span.
-     * @return The managed object to release the currently active span with.
-     * @see SpanManager#currentSpan()
+     * @param span The span to become the new active span.
+     * @return The managed object to release the new active span with.
+     * @see SpanManager#manage(Span)
      * @see ManagedSpan#release()
      */
-    @Override
-    public ManagedSpan manage(Span span) {
+    public static ManagedSpan activate(Span span) {
         return lazySpanManager().manage(span);
     }
 
     /**
-     * Releases all managed spans including any parents.
-     * <p>
-     * This allows boundary filters to release all spans before relinquishing control over their Thread,
-     * which may end up repurposed by a threadpool.
+     * Unconditional cleanup of all active spans for the current process.
      *
-     * @see ManagedSpan#release()
+     * @see SpanManager#clear()
      */
-    @Override
-    public void clear() {
+    public static void clear() {
         lazySpanManager().clear();
     }
 

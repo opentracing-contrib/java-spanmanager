@@ -7,10 +7,10 @@ import io.opentracing.contrib.spanmanager.ManagedSpan;
 import java.util.Map;
 
 /**
- * A self-releasing managed span.
+ * A {@link Span} that automatically {@link #release() releases}
+ * when {@link #finish() finished} or {@link #close() closed}.
  * <p>
- * This managed span will release itself when it is {@link #finish() finished} or {@link #close() closed}.<br>
- * All other span functionality is forwareded to the actual managed Span.
+ * All other methods are forwarded to the actual managed Span.
  */
 final class AutoReleasingManagedSpan implements ManagedSpan, Span {
 
@@ -35,38 +35,38 @@ final class AutoReleasingManagedSpan implements ManagedSpan, Span {
     }
 
     /**
-     * Finishes the delegate and releases this currently active ManagedSpan.
+     * {@link Span#finish() Finishes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void finish() {
         try {
             getSpan().finish();
         } finally {
-            this.release();
+            release();
         }
     }
 
     /**
-     * Finishes the delegate and releases this currently active ManagedSpan.
+     * {@link Span#finish(long) Finishes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void finish(long finishMicros) {
         try {
             getSpan().finish(finishMicros);
         } finally {
-            this.release();
+            release();
         }
     }
 
     /**
-     * Finishes the delegate and releases this currently active ManagedSpan.
+     * {@link Span#close() Closes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void close() {
         try {
             getSpan().close();
         } finally {
-            this.release();
+            release();
         }
     }
 

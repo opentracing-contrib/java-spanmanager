@@ -27,9 +27,10 @@ public interface SpanManager {
     ManagedSpan manage(Span span);
 
     /**
-     * Releases all managed spans including any parents.
+     * Unconditional cleanup of all managed spans including any parents.
      * <p>
-     * This allows boundary filters to release all spans before relinquishing control over their Thread,
+     * This allows boundary filters to release all active spans
+     * before relinquishing control over their process,
      * which may end up repurposed by a threadpool.
      *
      * @see ManagedSpan#release()

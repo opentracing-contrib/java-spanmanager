@@ -1,6 +1,5 @@
 package io.opentracing.contrib.spanmanager.tracer;
 
-import io.opentracing.NoopSpanBuilder;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
@@ -10,13 +9,13 @@ import io.opentracing.contrib.spanmanager.ManagedSpan;
 import java.util.Map;
 
 /**
- * {@link SpanBuilder} that forwards all methods to a delegate.<br>
- * The {@link #start()} method is overridden to automatically {@link ActiveSpanManager#manage(Span) manage}
- * the started {@link Span}, wrapping it in an {@link AutoReleasingManagedSpan} object.<br>
- * The {@link AutoReleasingManagedSpan} object {@link ManagedSpan#release() releases} the span automatically
- * when it is {@link Span#finish() finished} or {@link Span#close() closed}.
+ * {@link SpanBuilder} that automatically {@link ActiveSpanManager#activate(Span) activates} newly started spans.
+ * <p>
+ * The activated ManagedSpan is wrapped in an {@linkplain AutoReleasingManagedSpan}
+ * to automatically release when finished.<br>
+ * All other methods are forwarded to the delegate span builder.
  *
- * @see ActiveSpanManager#manage(Span)
+ * @see ActiveSpanManager
  * @see AutoReleasingManagedSpan#finish()
  */
 final class ManagedSpanBuilder implements SpanBuilder {
@@ -30,12 +29,9 @@ final class ManagedSpanBuilder implements SpanBuilder {
 
     /**
      * Replaces the {@link #delegate} SpanBuilder by a delegated-method result.
-     * <p>
-     * For <code>null</code> or {@link NoopSpanBuilder} the active span builder short-circuits to the noop SpanBuilder,
-     * similar to the <code>AbstractSpanBuilder</code> implementation.
      *
      * @param spanBuilder The builder returned from the delegate (normally '== delegate').
-     * @return Either this re-wrapped ActiveSpanBuilder or the NoopSpanBuilder.
+     * @return This re-wrapped ActiveSpanBuilder.
      */
     SpanBuilder rewrap(SpanBuilder spanBuilder) {
         if (spanBuilder != null) this.delegate = spanBuilder;
@@ -43,17 +39,15 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     /**
-     * Starts the built Span and {@link ActiveSpanManager#manage(Span) activates} it.
+     * Starts the built Span and {@link ActiveSpanManager#activate(Span) activates} it.
      *
      * @return a new 'currently active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
-     * @see ActiveSpanManager#manage(Span)
+     * @see ActiveSpanManager#activate(Span)
      * @see AutoReleasingManagedSpan#release()
      */
     @Override
     public Span start() {
-        Span newSpan = delegate.start();
-        // TODO: Do we want to make NoopSpan instances managed?
-        return new AutoReleasingManagedSpan(ActiveSpanManager.get().manage(newSpan));
+        return new AutoReleasingManagedSpan(ActiveSpanManager.activate(delegate.start()));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.

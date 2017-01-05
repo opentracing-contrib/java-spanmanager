@@ -10,7 +10,7 @@ Static utility to access the _currently active span_.
  2. This _active span_ can be set through the `activate(Span)` method,
     returning a `ManagedSpan` for later deactivation.
  3. `clear()` provides unconditional cleanup of _all active spans_ for the current process.
- 4. A custom implementation can be registered by calling `register(SpanManager)`.
+ 4. A custom SpanManager can be registered by calling `register(SpanManager)`.
     _see section 'Custom span managers'_
 
 ## Concurrency
@@ -32,9 +32,10 @@ Provides factory-methods similar to standard java `Executors`:
 ### ManagedSpanTracer
 
 This convenience `Tracer` automates managing the _active span_:
- 1. It is a wrapper that forwards all calls to another `Tracer` implementation.
- 2. Spans created with this tracer are automatically _activated_ when started,
- 3. and automatically _released_ when they finish.
+ 1. It wraps another `Tracer`.
+ 2. `Spans` created with this tracer are:
+    - automatically _activated_ when started, and
+    - automatically _released_ when finished.
 
 ## Custom span managers
 
@@ -47,7 +48,7 @@ The _active_ SpanManager is resolved as follows:
  1. The last-registered span manager always takes precedence.
  2. If no manager was registered, one is looked up from the `ServiceLoader`.  
     The ActiveSpanManager will not attempt to choose between implementations:
- 3. If no single implementation is found, a default implementation will be used.
+ 3. If no single implementation is found, the default SpanManager will be used.
 
 
 ## Examples

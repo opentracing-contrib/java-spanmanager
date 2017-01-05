@@ -45,9 +45,11 @@ public final class ActiveSpanManager {
     /**
      * Lazily resolves the active SpanManager.
      * <p>
-     * The active SpanManager can be {@link #register(SpanManager) re-configured} at any time.
+     * This indirection guarantees a valid SpanManager is available before, during and after
+     * application initialization.<br>
+     * It also means the active SpanManager can be {@link #register(SpanManager) re-configured} at any time.
      *
-     * @return The active span manager (non-<code>null</code>).
+     * @return The active SpanManager (non-<code>null</code>).
      */
     private static SpanManager activeSpanManager() {
         SpanManager activeSpanManager = ACTIVE_SPANMANAGER.get();
@@ -65,13 +67,13 @@ public final class ActiveSpanManager {
     /**
      * Explicitly configures a <code>SpanManager</code> to back the behaviour of the {@link ActiveSpanManager} methods.
      * <p>
-     * The previous manager is returned so it can be:
+     * The previous SpanManager is returned so it can be:
      * <ul>
      * <li>{@link SpanManager#clear() cleared} as it no longer is the active manager, or</li>
      * <li>restored later, for example in a testing situation.</li>
      * </ul>
      *
-     * @param spanManager Manager for in-process span propagation.
+     * @param spanManager New SpanManager for active span propagation.
      * @return The previously active SpanManager, or <code>null</code> if there was none.
      */
     public static SpanManager register(SpanManager spanManager) {

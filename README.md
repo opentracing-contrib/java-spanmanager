@@ -1,11 +1,11 @@
-# java-activespan
+# java-spanmanager
 
 This library provides a way to manage spans and propagate them to other threads.
 
 ## ActiveSpanManager
 
-Static utility to access the _currently active span_.
- 1. The `activeSpan()` method returns the _active span_ in the current process.   
+Static utility to manage the _active span_:
+ 1. `activeSpan()` returns the _active span_ in the current process.   
     If there is no active span, a `NoopSpan` is returned instead.
  2. This _active span_ can be set through the `activate(Span)` method,
     returning a `ManagedSpan` for later deactivation.

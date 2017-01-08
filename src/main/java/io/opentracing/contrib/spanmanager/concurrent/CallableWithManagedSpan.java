@@ -1,36 +1,38 @@
 package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
-import io.opentracing.contrib.spanmanager.GlobalSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
 import java.util.concurrent.Callable;
 
 /**
- * {@link Callable} wrapper that will execute with a {@link GlobalSpanManager#currentSpan() custom current span}
+ * {@link Callable} wrapper that will execute with a {@link SpanManager#manage(Span) managed span}
  * specified from the scheduling thread.
  *
- * @see GlobalSpanManager
+ * @see SpanManager
  */
-final class CallableWithCurrentSpan<T> implements Callable<T> {
+final class CallableWithManagedSpan<T> implements Callable<T> {
 
     private final Callable<T> delegate;
-    private final Span customCurrentSpan;
+    private final SpanManager spanManager;
+    private final Span spanToManage;
 
-    CallableWithCurrentSpan(Callable<T> delegate, Span customCurrentSpan) {
+    CallableWithManagedSpan(Callable<T> delegate, SpanManager spanManager, Span spanToManage) {
         if (delegate == null) throw new NullPointerException("Callable delegate is <null>.");
+        if (spanManager == null) throw new NullPointerException("Span manager is <null>.");
         this.delegate = delegate;
-        this.customCurrentSpan = customCurrentSpan;
+        this.spanManager = spanManager;
+        this.spanToManage = spanToManage;
     }
 
     /**
-     * Performs the delegate call with the specified custom current span.
+     * Performs the delegate call with the specified managed span.
      *
      * @return The result from the original call.
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        final SpanManager.ManagedSpan managedSpan = GlobalSpanManager.get().manage(customCurrentSpan);
+        final SpanManager.ManagedSpan managedSpan = spanManager.manage(spanToManage);
         try {
             return delegate.call();
         } finally {

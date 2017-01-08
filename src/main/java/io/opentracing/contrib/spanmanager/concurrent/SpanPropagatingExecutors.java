@@ -1,5 +1,7 @@
 package io.opentracing.contrib.spanmanager.concurrent;
 
+import io.opentracing.contrib.spanmanager.SpanManager;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -10,10 +12,10 @@ import java.util.concurrent.ThreadFactory;
  * <li>{@link #newFixedThreadPool(int)}</li>
  * <li>{@link #newSingleThreadExecutor()}</li>
  * <li>{@link #newCachedThreadPool()}</li>
- * <li>Variants of the above with additional {@link ThreadFactory} argument:
- * {@link #newFixedThreadPool(int, ThreadFactory)},
- * {@link #newSingleThreadExecutor(ThreadFactory)},
- * {@link #newCachedThreadPool(ThreadFactory)}
+ * <li>Variants of the above with additional {@link ThreadFactory} and {@link SpanManager} arguments:
+ * {@link #newFixedThreadPool(int, ThreadFactory, SpanManager)},
+ * {@link #newSingleThreadExecutor(ThreadFactory, SpanManager)},
+ * {@link #newCachedThreadPool(ThreadFactory, SpanManager)}
  * </li>
  * </ul>
  *
@@ -30,11 +32,12 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newFixedThreadPool(int) fixed threadpool} that propagates
-     * the active span into the started threads.
+     * the active span into the started threads, using the global span manager.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
      * @see Executors#newFixedThreadPool(int)
+     * @see io.opentracing.contrib.spanmanager.GlobalSpanManager
      */
     public static SpanPropagatingExecutorService newFixedThreadPool(int nThreads) {
         return SpanPropagatingExecutorService.of(Executors.newFixedThreadPool(nThreads));
@@ -46,19 +49,22 @@ public final class SpanPropagatingExecutors {
      *
      * @param nThreads      the number of threads in the pool
      * @param threadFactory the factory to use when creating new threads
+     * @param spanManager   the SpanManager to manage spans with.
      * @return the newly created thread pool
      * @see Executors#newFixedThreadPool(int, ThreadFactory)
      */
-    public static SpanPropagatingExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.of(Executors.newFixedThreadPool(nThreads, threadFactory));
+    public static SpanPropagatingExecutorService newFixedThreadPool(
+            int nThreads, ThreadFactory threadFactory, SpanManager spanManager) {
+        return SpanPropagatingExecutorService.of(Executors.newFixedThreadPool(nThreads, threadFactory), spanManager);
     }
 
     /**
      * This method returns a {@link Executors#newSingleThreadExecutor() single-threaded executor} that propagates
-     * the active span into the started thread.
+     * the active span into the started thread using the global span manager.
      *
      * @return the newly created single-theaded executor
      * @see Executors#newSingleThreadExecutor()
+     * @see io.opentracing.contrib.spanmanager.GlobalSpanManager
      */
     public static SpanPropagatingExecutorService newSingleThreadExecutor() {
         return SpanPropagatingExecutorService.of(Executors.newSingleThreadExecutor());
@@ -69,19 +75,22 @@ public final class SpanPropagatingExecutors {
      * that propagates the active span into the started thread.
      *
      * @param threadFactory the factory to use when creating new threads
+     * @param spanManager   the SpanManager to manage spans with.
      * @return the newly created single-theaded executor
      * @see Executors#newSingleThreadExecutor(ThreadFactory)
      */
-    public static SpanPropagatingExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.of(Executors.newSingleThreadExecutor(threadFactory));
+    public static SpanPropagatingExecutorService newSingleThreadExecutor(
+            ThreadFactory threadFactory, SpanManager spanManager) {
+        return SpanPropagatingExecutorService.of(Executors.newSingleThreadExecutor(threadFactory), spanManager);
     }
 
     /**
      * This method returns a {@link Executors#newCachedThreadPool() cached threadpool} that propagates
-     * the active span into the started threads.
+     * the active span into the started threads using the global span manager.
      *
      * @return the newly created thread pool
      * @see Executors#newCachedThreadPool()
+     * @see io.opentracing.contrib.spanmanager.GlobalSpanManager
      */
     public static SpanPropagatingExecutorService newCachedThreadPool() {
         return SpanPropagatingExecutorService.of(Executors.newCachedThreadPool());
@@ -92,11 +101,12 @@ public final class SpanPropagatingExecutors {
      * the active span into the started threads.
      *
      * @param threadFactory the factory to use when creating new threads
+     * @param spanManager   the SpanManager to manage spans with.
      * @return the newly created thread pool
      * @see Executors#newCachedThreadPool(ThreadFactory)
      */
-    public static SpanPropagatingExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.of(Executors.newCachedThreadPool(threadFactory));
+    public static SpanPropagatingExecutorService newCachedThreadPool(ThreadFactory threadFactory, SpanManager spanManager) {
+        return SpanPropagatingExecutorService.of(Executors.newCachedThreadPool(threadFactory), spanManager);
     }
 
 }

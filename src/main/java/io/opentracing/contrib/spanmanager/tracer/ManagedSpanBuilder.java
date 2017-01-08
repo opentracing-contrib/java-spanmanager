@@ -3,28 +3,30 @@ package io.opentracing.contrib.spanmanager.tracer;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
-import io.opentracing.contrib.spanmanager.GlobalSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
 import java.util.Map;
 
 /**
- * {@link SpanBuilder} that automatically {@link GlobalSpanManager#manage(Span) activates} newly started spans.
+ * {@link SpanBuilder} that automatically {@link SpanManager#manage(Span) activates} newly started spans.
  * <p>
  * The activated ManagedSpan is wrapped in an {@linkplain AutoReleasingManagedSpan}
  * to automatically release when finished.<br>
  * All other methods are forwarded to the delegate span builder.
  *
- * @see GlobalSpanManager
+ * @see SpanManager
  * @see AutoReleasingManagedSpan#finish()
  */
 final class ManagedSpanBuilder implements SpanBuilder {
 
     protected SpanBuilder delegate;
+    private final SpanManager spanManager;
 
-    ManagedSpanBuilder(SpanBuilder delegate) {
+    ManagedSpanBuilder(SpanBuilder delegate, SpanManager spanManager) {
         if (delegate == null) throw new NullPointerException("Delegate SpanBuilder was <null>.");
+        if (spanManager == null) throw new NullPointerException("Span manager was <null>.");
         this.delegate = delegate;
+        this.spanManager = spanManager;
     }
 
     /**
@@ -39,15 +41,15 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     /**
-     * Starts the built Span and {@link GlobalSpanManager#manage(Span) activates} it.
+     * Starts the built Span and {@link SpanManager#manage(Span) activates} it.
      *
      * @return a new 'currently active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
-     * @see GlobalSpanManager#manage(Span)
+     * @see SpanManager#manage(Span)
      * @see AutoReleasingManagedSpan#release()
      */
     @Override
     public Span start() {
-        return new AutoReleasingManagedSpan(GlobalSpanManager.get().manage(delegate.start()));
+        return new AutoReleasingManagedSpan(spanManager.manage(delegate.start()));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.

@@ -8,7 +8,7 @@
     <!-- Artifact identification -->
     <groupId>io.opentracing.contrib.spanmanager</groupId>
     <artifactId>opentracing-spanmanager</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <!-- Project information -->

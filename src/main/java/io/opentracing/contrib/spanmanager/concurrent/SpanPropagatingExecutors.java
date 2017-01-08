@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadFactory;
  * </li>
  * </ul>
  *
- * @see SpanPropagatingExecutorService#wrap(ExecutorService)
+ * @see SpanPropagatingExecutorService#of(ExecutorService)
  */
 public final class SpanPropagatingExecutors {
 
@@ -37,7 +37,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newFixedThreadPool(int)
      */
     public static SpanPropagatingExecutorService newFixedThreadPool(int nThreads) {
-        return SpanPropagatingExecutorService.wrap(Executors.newFixedThreadPool(nThreads));
+        return SpanPropagatingExecutorService.of(Executors.newFixedThreadPool(nThreads));
     }
 
     /**
@@ -50,7 +50,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newFixedThreadPool(int, ThreadFactory)
      */
     public static SpanPropagatingExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.wrap(Executors.newFixedThreadPool(nThreads, threadFactory));
+        return SpanPropagatingExecutorService.of(Executors.newFixedThreadPool(nThreads, threadFactory));
     }
 
     /**
@@ -61,7 +61,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newSingleThreadExecutor()
      */
     public static SpanPropagatingExecutorService newSingleThreadExecutor() {
-        return SpanPropagatingExecutorService.wrap(Executors.newSingleThreadExecutor());
+        return SpanPropagatingExecutorService.of(Executors.newSingleThreadExecutor());
     }
 
     /**
@@ -73,7 +73,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newSingleThreadExecutor(ThreadFactory)
      */
     public static SpanPropagatingExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.wrap(Executors.newSingleThreadExecutor(threadFactory));
+        return SpanPropagatingExecutorService.of(Executors.newSingleThreadExecutor(threadFactory));
     }
 
     /**
@@ -84,7 +84,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newCachedThreadPool()
      */
     public static SpanPropagatingExecutorService newCachedThreadPool() {
-        return SpanPropagatingExecutorService.wrap(Executors.newCachedThreadPool());
+        return SpanPropagatingExecutorService.of(Executors.newCachedThreadPool());
     }
 
     /**
@@ -96,7 +96,7 @@ public final class SpanPropagatingExecutors {
      * @see Executors#newCachedThreadPool(ThreadFactory)
      */
     public static SpanPropagatingExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
-        return SpanPropagatingExecutorService.wrap(Executors.newCachedThreadPool(threadFactory));
+        return SpanPropagatingExecutorService.of(Executors.newCachedThreadPool(threadFactory));
     }
 
 }

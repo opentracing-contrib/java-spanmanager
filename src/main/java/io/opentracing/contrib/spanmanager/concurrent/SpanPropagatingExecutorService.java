@@ -1,7 +1,7 @@
 package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
-import io.opentracing.contrib.spanmanager.ActiveSpanManager;
+import io.opentracing.contrib.spanmanager.GlobalSpanManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Propagates the {@link ActiveSpanManager#activeSpan() active span} from the caller into each call that is executed.
+ * Propagates the {@link GlobalSpanManager#currentSpan() currently active span} from the caller
+ * into each call that is executed.
  * <p>
- * <em>Note:</em> The active span is merely propagated. It is explicitly <b>not</b> finished by the calls.
+ * <em>Note:</em> The active span is merely propagated.
+ * It is explicitly <b>not</b> finished when the calls end,
+ * nor will new spans be automatically related to the propagated span.
  */
 public class SpanPropagatingExecutorService implements ExecutorService {
     private final ExecutorService delegate;
@@ -22,88 +25,88 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     }
 
     /**
-     * Wraps the delegate ExecutorService to propagate the {@link ActiveSpanManager#activeSpan() active span}
+     * Wraps the delegate ExecutorService to propagate the {@link GlobalSpanManager#currentSpan() currently active span}
      * of callers into the executed calls.
      *
      * @param delegate The executorservice to forward calls to.
      * @return An ExecutorService that propagates active spans from callers into executed calls.
      */
-    public static SpanPropagatingExecutorService wrap(final ExecutorService delegate) {
+    public static SpanPropagatingExecutorService of(final ExecutorService delegate) {
         if (delegate instanceof SpanPropagatingExecutorService) return (SpanPropagatingExecutorService) delegate;
         return new SpanPropagatingExecutorService(delegate);
     }
 
     /**
-     * Propagates the {@link ActiveSpanManager#activeSpan() currently active span} into the runnable
+     * Propagates the {@link GlobalSpanManager#currentSpan() custom current span} into the runnable
      * and performs cleanup afterwards.
      * <p>
-     * <em>Note:</em> The <code>activeSpan</code> is merely propagated.
+     * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.
      * The specified span is explicitly <b>not</b> finished by the runnable.
      *
-     * @param runnable   The runnable to be executed.
-     * @param activeSpan The span to be propagated.
-     * @return The wrapped runnable to execute with the active span.
+     * @param runnable          The runnable to be executed.
+     * @param customCurrentSpan The span to be propagated.
+     * @return The wrapped runnable to execute with the custom span as current span.
      */
-    public static Runnable runnableWithActiveSpan(Runnable runnable, Span activeSpan) {
-        return new RunnableWithActiveSpan(runnable, activeSpan);
+    public static Runnable runnableWithCurrentSpan(Runnable runnable, Span customCurrentSpan) {
+        return new RunnableWithCurrentSpan(runnable, customCurrentSpan);
     }
 
     /**
-     * Propagates the {@link ActiveSpanManager#activeSpan() currently active span} into the callable
+     * Propagates the {@link GlobalSpanManager#currentSpan() custom current span} into the callable
      * and performs cleanup afterwards.
      * <p>
-     * <em>Note:</em> The <code>activeSpan</code> is merely propagated.
+     * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.
      * The specified span is explicitly <b>not</b> finished by the callable.
      *
-     * @param <T>        The callable result type.
-     * @param callable   The callable to be executed.
-     * @param activeSpan The span to be propagated.
-     * @return The wrapped callable to execute with the active span.
+     * @param <T>               The callable result type.
+     * @param callable          The callable to be executed.
+     * @param customCurrentSpan The span to be propagated.
+     * @return The wrapped callable to execute with the custom span as current span.
      */
-    public static <T> Callable<T> callableWithActiveSpan(Callable<T> callable, Span activeSpan) {
-        return new CallableWithActiveSpan<T>(callable, activeSpan);
+    public static <T> Callable<T> callableWithCurrentSpan(Callable<T> callable, Span customCurrentSpan) {
+        return new CallableWithCurrentSpan<T>(callable, customCurrentSpan);
     }
 
     @Override
     public void execute(Runnable command) {
-        delegate.execute(runnableWithActiveSpan(command, ActiveSpanManager.activeSpan()));
+        delegate.execute(runnableWithCurrentSpan(command, GlobalSpanManager.get().currentSpan()));
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        return delegate.submit(runnableWithActiveSpan(task, ActiveSpanManager.activeSpan()));
+        return delegate.submit(runnableWithCurrentSpan(task, GlobalSpanManager.get().currentSpan()));
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        return delegate.submit(runnableWithActiveSpan(task, ActiveSpanManager.activeSpan()), result);
+        return delegate.submit(runnableWithCurrentSpan(task, GlobalSpanManager.get().currentSpan()), result);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        return delegate.submit(callableWithActiveSpan(task, ActiveSpanManager.activeSpan()));
+        return delegate.submit(callableWithCurrentSpan(task, GlobalSpanManager.get().currentSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        return delegate.invokeAll(tasksWithActiveSpan(tasks, ActiveSpanManager.activeSpan()));
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, GlobalSpanManager.get().currentSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        return delegate.invokeAll(tasksWithActiveSpan(tasks, ActiveSpanManager.activeSpan()), timeout, unit);
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, GlobalSpanManager.get().currentSpan()), timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        return delegate.invokeAny(tasksWithActiveSpan(tasks, ActiveSpanManager.activeSpan()));
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, GlobalSpanManager.get().currentSpan()));
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return delegate.invokeAny(tasksWithActiveSpan(tasks, ActiveSpanManager.activeSpan()), timeout, unit);
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, GlobalSpanManager.get().currentSpan()), timeout, unit);
     }
 
     @Override
@@ -131,11 +134,11 @@ public class SpanPropagatingExecutorService implements ExecutorService {
         return delegate.awaitTermination(timeout, unit);
     }
 
-    private static <T> Collection<? extends Callable<T>> tasksWithActiveSpan(
-            Collection<? extends Callable<T>> tasks, Span activeSpan) {
+    private static <T> Collection<? extends Callable<T>> tasksWithCurrentSpan(
+            Collection<? extends Callable<T>> tasks, Span customCurrentSpan) {
         if (tasks == null) throw new NullPointerException("Collection of tasks is <null>.");
         Collection<Callable<T>> result = new ArrayList<Callable<T>>(tasks.size());
-        for (Callable<T> task : tasks) result.add(callableWithActiveSpan(task, activeSpan));
+        for (Callable<T> task : tasks) result.add(callableWithCurrentSpan(task, customCurrentSpan));
         return result;
     }
 

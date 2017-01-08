@@ -2,7 +2,7 @@ package io.opentracing.contrib.spanmanager.tracer;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.contrib.spanmanager.ManagedSpan;
+import io.opentracing.contrib.spanmanager.SpanManager;
 
 import java.util.Map;
 
@@ -12,11 +12,11 @@ import java.util.Map;
  * <p>
  * All other methods are forwarded to the actual managed Span.
  */
-final class AutoReleasingManagedSpan implements ManagedSpan, Span {
+final class AutoReleasingManagedSpan implements Span, SpanManager.ManagedSpan {
 
-    private final ManagedSpan managedSpan;
+    private final SpanManager.ManagedSpan managedSpan;
 
-    AutoReleasingManagedSpan(ManagedSpan managedSpan) {
+    AutoReleasingManagedSpan(SpanManager.ManagedSpan managedSpan) {
         if (managedSpan == null) throw new NullPointerException("Managed span was <null>.");
         this.managedSpan = managedSpan;
     }
@@ -35,7 +35,7 @@ final class AutoReleasingManagedSpan implements ManagedSpan, Span {
     }
 
     /**
-     * {@link Span#finish() Finishes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#finish() Finishes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void finish() {
@@ -47,7 +47,7 @@ final class AutoReleasingManagedSpan implements ManagedSpan, Span {
     }
 
     /**
-     * {@link Span#finish(long) Finishes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#finish(long) Finishes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void finish(long finishMicros) {
@@ -59,7 +59,7 @@ final class AutoReleasingManagedSpan implements ManagedSpan, Span {
     }
 
     /**
-     * {@link Span#close() Closes} the delegate and {@link ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#close() Closes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
      */
     @Override
     public void close() {

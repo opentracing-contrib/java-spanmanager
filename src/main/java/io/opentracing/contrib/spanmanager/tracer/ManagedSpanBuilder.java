@@ -3,19 +3,19 @@ package io.opentracing.contrib.spanmanager.tracer;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
-import io.opentracing.contrib.spanmanager.ActiveSpanManager;
-import io.opentracing.contrib.spanmanager.ManagedSpan;
+import io.opentracing.contrib.spanmanager.GlobalSpanManager;
+import io.opentracing.contrib.spanmanager.SpanManager;
 
 import java.util.Map;
 
 /**
- * {@link SpanBuilder} that automatically {@link ActiveSpanManager#activate(Span) activates} newly started spans.
+ * {@link SpanBuilder} that automatically {@link GlobalSpanManager#manage(Span) activates} newly started spans.
  * <p>
  * The activated ManagedSpan is wrapped in an {@linkplain AutoReleasingManagedSpan}
  * to automatically release when finished.<br>
  * All other methods are forwarded to the delegate span builder.
  *
- * @see ActiveSpanManager
+ * @see GlobalSpanManager
  * @see AutoReleasingManagedSpan#finish()
  */
 final class ManagedSpanBuilder implements SpanBuilder {
@@ -39,15 +39,15 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     /**
-     * Starts the built Span and {@link ActiveSpanManager#activate(Span) activates} it.
+     * Starts the built Span and {@link GlobalSpanManager#manage(Span) activates} it.
      *
      * @return a new 'currently active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
-     * @see ActiveSpanManager#activate(Span)
+     * @see GlobalSpanManager#manage(Span)
      * @see AutoReleasingManagedSpan#release()
      */
     @Override
     public Span start() {
-        return new AutoReleasingManagedSpan(ActiveSpanManager.activate(delegate.start()));
+        return new AutoReleasingManagedSpan(GlobalSpanManager.get().manage(delegate.start()));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.
@@ -58,7 +58,7 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     public SpanBuilder asChildOf(Span parent) {
-        if (parent instanceof ManagedSpan) parent = ((ManagedSpan) parent).getSpan();
+        if (parent instanceof SpanManager.ManagedSpan) parent = ((SpanManager.ManagedSpan) parent).getSpan();
         return rewrap(delegate.asChildOf(parent));
     }
 

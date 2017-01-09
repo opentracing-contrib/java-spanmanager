@@ -98,7 +98,7 @@ This convenience `Tracer` automates managing the _current span_:
                 // Scheduling the traced call:
                 Future<String> result = propagatingThreadpool.submit(new TracedCall());
                 
-            } // ((ManagedSpan) parent).release()   // Performed by ManagedSpanTracer
+            } // parent.finish() + ((ManagedSpan) parent).release()   // Performed by ManagedSpanTracer
         }
     }
 

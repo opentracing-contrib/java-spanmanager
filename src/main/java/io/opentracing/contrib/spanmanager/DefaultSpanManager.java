@@ -36,15 +36,32 @@ public final class DefaultSpanManager implements SpanManager {
         return INSTANCE;
     }
 
+    /**
+     * Stack unwinding algorithm that refreshes the currently managed span.
+     * <p>
+     * See {@link DefaultSpanManager class javadoc} for a full description.
+     *
+     * @return The current non-released LinkedManagedSpan or <code>null</code> if none remained.
+     */
+    private LinkedManagedSpan refreshCurrent() {
+        LinkedManagedSpan current = managed.get();
+        while (current != null && current.released.get()) { // Unwind stack if necessary.
+            current = current.parent;
+        }
+        if (current == null) managed.remove();
+        else managed.set(current);
+        return current;
+    }
+
     @Override
     public Span currentSpan() {
-        LinkedManagedSpan managedSpan = managed.get();
-        return managedSpan != null ? managedSpan.span : NoopSpan.INSTANCE;
+        LinkedManagedSpan current = refreshCurrent();
+        return current != null ? current.span : NoopSpan.INSTANCE;
     }
 
     @Override
     public SpanManager.ManagedSpan manage(Span span) {
-        LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, managed.get());
+        LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, refreshCurrent());
         managed.set(managedSpan);
         return managedSpan;
     }
@@ -74,22 +91,10 @@ public final class DefaultSpanManager implements SpanManager {
             return span;
         }
 
-        /**
-         * Please see {@link DefaultSpanManager outer class description} for the stack-unwinding documentation.
-         */
         public void release() {
             if (released.compareAndSet(false, true)) {
-                LinkedManagedSpan current = managed.get();
-                if (this == current) {
-                    while (current != null && current.released.get()) {
-                        current = current.parent;
-                    }
-                    if (current == null) managed.remove();
-                    else managed.set(current);
-                    LOGGER.log(Level.FINER, "Deactivated {0} and restored managed span to {1}.", new Object[]{this, current});
-                } else {
-                    LOGGER.log(Level.FINE, "Deactivated {0} without affecting managed span {1}.", new Object[]{this, current});
-                }
+                LinkedManagedSpan current = refreshCurrent(); // Trigger stack-unwinding algorithm.
+                LOGGER.log(Level.FINER, "Released {0}, current span is {1}.", new Object[]{this, current});
             } else {
                 LOGGER.log(Level.FINEST, "No action needed, {0} was already released.", this);
             }

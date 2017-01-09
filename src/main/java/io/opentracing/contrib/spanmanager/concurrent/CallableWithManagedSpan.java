@@ -17,10 +17,10 @@ final class CallableWithManagedSpan<T> implements Callable<T> {
     private final SpanManager spanManager;
     private final Span spanToManage;
 
-    CallableWithManagedSpan(Callable<T> delegate, SpanManager spanManager, Span spanToManage) {
-        if (delegate == null) throw new NullPointerException("Callable delegate is <null>.");
+    CallableWithManagedSpan(Callable<T> callable, SpanManager spanManager, Span spanToManage) {
+        if (callable == null) throw new NullPointerException("Callable is <null>.");
         if (spanManager == null) throw new NullPointerException("Span manager is <null>.");
-        this.delegate = delegate;
+        this.delegate = callable;
         this.spanManager = spanManager;
         this.spanToManage = spanToManage;
     }

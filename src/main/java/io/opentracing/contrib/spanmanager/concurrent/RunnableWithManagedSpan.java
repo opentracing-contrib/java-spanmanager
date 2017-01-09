@@ -15,10 +15,10 @@ final class RunnableWithManagedSpan implements Runnable {
     private final SpanManager spanManager;
     private final Span spanToManage;
 
-    RunnableWithManagedSpan(Runnable delegate, SpanManager spanManager, Span spanToManage) {
-        if (delegate == null) throw new NullPointerException("Runnable delegate is <null>.");
+    RunnableWithManagedSpan(Runnable runnable, SpanManager spanManager, Span spanToManage) {
+        if (runnable == null) throw new NullPointerException("Runnable is <null>.");
         if (spanManager == null) throw new NullPointerException("Span manager is <null>.");
-        this.delegate = delegate;
+        this.delegate = runnable;
         this.spanManager = spanManager;
         this.spanToManage = spanToManage;
     }

@@ -44,19 +44,22 @@ public final class DefaultSpanManager implements SpanManager {
      * @return The current non-released LinkedManagedSpan or <code>null</code> if none remained.
      */
     private LinkedManagedSpan refreshCurrent() {
-        LinkedManagedSpan current = managed.get();
+        LinkedManagedSpan managedSpan = managed.get();
+        LinkedManagedSpan current = managedSpan;
         while (current != null && current.released.get()) { // Unwind stack if necessary.
             current = current.parent;
         }
-        if (current == null) managed.remove();
-        else managed.set(current);
+        if (current != managedSpan) { // refresh current if necessary.
+            if (current == null) managed.remove();
+            else managed.set(current);
+        }
         return current;
     }
 
     @Override
     public Span currentSpan() {
         LinkedManagedSpan current = refreshCurrent();
-        return current != null ? current.span : NoopSpan.INSTANCE;
+        return current != null && current.span != null ? current.span : NoopSpan.INSTANCE;
     }
 
     @Override

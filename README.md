@@ -52,33 +52,11 @@ This convenience `Tracer` automates managing the _current span_:
 
 ## Examples
 
-### Manually propagating any Span into a background thread
-
-To propagate a `Span` into a new `Thread` can be accomplished as follows:
-
-```java
-    final SpanManager spanManager = DefaultSpanManager.getInstance();
-    final Span someSpan = ...
-    Thread thread = new Thread() {
-        @Override
-        public void run() {
-            try (ManagedSpan parent = spanManager.manage(someSpan)) {
-                // ...regular traced background process...
-                assert parent.getSpan() == spanManager.currentSpan();
-                try (Span newSpan = tracer.buildSpan("someOperation").asChildOf(spanManager.currentSpan().context()).start()) {
-                    // ...traced as child of the propagated span...
-                }
-            }
-        }
-    };
-
-```
-
-### Threadpool that propagates currentSpan() into threads
+### Threadpool that propagates SpanManager.currentSpan() into threads
 
 ```java
     class TracedCall implements Callable<String> {
-        static SpanManager spanManager = DefaultSpanManager.getInstance();
+        SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
         
         @Override
         public String call() {
@@ -89,8 +67,8 @@ To propagate a `Span` into a new `Thread` can be accomplished as follows:
     }
 
     class Caller {
-        static SpanManager spanManager = DefaultSpanManager.getInstance(); 
-        static ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
+        SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance(); 
+        ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
 
         void run() {
             // ...code that sets the current Span somewhere:
@@ -105,16 +83,17 @@ To propagate a `Span` into a new `Thread` can be accomplished as follows:
 
 ```
 
-### Threadpool with 'managed span' tracer
+### Propagating threadpool with 'ManagedSpan' Tracer
 
 ```java
 
     class Caller {
-        static Tracer tracer = new ManagedSpanTracer(anyTracer(), DefaultSpanManager.getInstance());
-        static ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
+        SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
+        Tracer tracer = new ManagedSpanTracer(anyTracer(), spanManager);
+        ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
 
         void run() {
-            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent == currentSpan()
+            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent === spanManager.currentSpan()
             
                 // Scheduling the traced call:
                 Future<String> result = propagatingThreadpool.submit(new TracedCall());
@@ -125,3 +104,60 @@ To propagate a `Span` into a new `Thread` can be accomplished as follows:
 
 ```
 
+### Manually propagating any Span into a background thread
+
+To propagate a `Span` into a new `Thread` can be accomplished as follows:
+
+```java
+
+    class ExampleThread extends Thread {
+        private SpanManager spanManager;
+        private Span propagatedSpan;
+        
+        ExampleThread(SpanManager spanManager) {
+            this.spanManager = spanManager;
+            this.propagatedSpan = spanManager.currentSpan(); // from calling thread.
+        }
+        
+        @Override
+        public void run() {
+            try (ManagedSpan parent = spanManager.manage(propagatedSpan)) { // make currentSpan() === propagatedSpan
+
+                internalCode(); // any code that may require spanManager.currentSpan();
+                
+            } // spanManager.currentSpan() is restored (NoopSpan in new thread).
+        }
+
+        private void internalCode() {
+            // some code or library starting a new child-span from the 'current' span:
+            Span currentSpan = spanManager.currentSpan();
+            try (Span newSpan = tracer.buildSpan("someOperation").asChildOf(currentSpan.context()).start()) {
+            
+                // ...traced as child of the propagated span...
+                
+            } // newSpan is finished.
+        }
+      
+    }
+    
+    class App {
+        public static void main(String... args) throws InterruptedException {
+            Config config = ...;
+            Tracer tracer = config.getTracer();
+            SpanManager spanManager = config.getSpanManager(); // or DefaultSpanManager.getInstance();
+            Thread example = new ExampleThread(spanManager);
+
+            // Start an outer span:
+            try (Span appSpan = tracer.buildSpan("main").start();
+                    ManagedSpan managed = spanManager.manage(appSpan)) {
+            
+                example.start();
+                example.join();
+                
+            }
+            
+            System.exit(0);
+        }
+    }
+
+```

@@ -65,7 +65,7 @@ To propagate a `Span` into a new `Thread` can be accomplished as follows:
             try (ManagedSpan parent = spanManager.manage(someSpan)) {
                 // ...regular traced background process...
                 assert parent.getSpan() == spanManager.currentSpan();
-                try (Span newSpan = tracer.buildSpan("someOperation").asChildOf(parent.context()).start()) {
+                try (Span newSpan = tracer.buildSpan("someOperation").asChildOf(spanManager.currentSpan().context()).start()) {
                     // ...traced as child of the propagated span...
                 }
             }

@@ -1,5 +1,6 @@
 package io.opentracing.contrib.spanmanager.tracer;
 
+import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
@@ -19,7 +20,7 @@ import java.util.Map;
  */
 final class ManagedSpanBuilder implements SpanBuilder {
 
-    protected SpanBuilder delegate;
+    SpanBuilder delegate;
     private final SpanManager spanManager;
 
     ManagedSpanBuilder(SpanBuilder delegate, SpanManager spanManager) {
@@ -36,7 +37,9 @@ final class ManagedSpanBuilder implements SpanBuilder {
      * @return This re-wrapped ActiveSpanBuilder.
      */
     SpanBuilder rewrap(SpanBuilder spanBuilder) {
-        if (spanBuilder != null) this.delegate = spanBuilder;
+        if (spanBuilder != null) {
+            this.delegate = spanBuilder;
+        }
         return this;
     }
 
@@ -55,17 +58,17 @@ final class ManagedSpanBuilder implements SpanBuilder {
     // All other methods are forwarded to the delegate SpanBuilder.
 
     public SpanBuilder asChildOf(SpanContext parent) {
-        if (parent instanceof ManagedSpanBuilder) parent = ((ManagedSpanBuilder) parent).delegate;
-        return rewrap(delegate.asChildOf(parent));
+        return addReference(References.CHILD_OF, parent);
     }
 
     public SpanBuilder asChildOf(Span parent) {
-        if (parent instanceof SpanManager.ManagedSpan) parent = ((SpanManager.ManagedSpan) parent).getSpan();
-        return rewrap(delegate.asChildOf(parent));
+        return addReference(References.CHILD_OF, parent.context());
     }
 
     public SpanBuilder addReference(String referenceType, SpanContext context) {
-        if (context instanceof ManagedSpanBuilder) context = ((ManagedSpanBuilder) context).delegate;
+        if (context instanceof ManagedSpanBuilder) { // Weird that SpanBuilder extends Context!
+            context = ((ManagedSpanBuilder) context).delegate;
+        }
         return rewrap(delegate.addReference(referenceType, context));
     }
 

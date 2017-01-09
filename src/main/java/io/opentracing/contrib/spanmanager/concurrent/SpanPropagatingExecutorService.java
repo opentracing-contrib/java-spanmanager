@@ -21,37 +21,18 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     private final ExecutorService delegate;
     private final SpanManager spanManager;
 
-    private SpanPropagatingExecutorService(ExecutorService delegate, SpanManager spanManager) {
-        if (delegate == null) throw new NullPointerException("Delegate executor service is <null>.");
-        if (spanManager == null) throw new NullPointerException("SpanManager is <null>.");
-        this.delegate = delegate;
-        this.spanManager = spanManager;
-    }
-
-    /**
-     * Wraps the delegate ExecutorService to propagate the {@link GlobalSpanManager#currentSpan() currently active span}
-     * of callers into the executed calls, using the {@link GlobalSpanManager}.
-     *
-     * @param delegate The executorservice to forward calls to.
-     * @return An ExecutorService that propagates active spans from callers into executed calls.
-     * @see #of(ExecutorService, SpanManager)
-     * @see GlobalSpanManager
-     */
-    public static SpanPropagatingExecutorService of(final ExecutorService delegate) {
-        return of(delegate, GlobalSpanManager.get());
-    }
-
     /**
      * Wraps the delegate ExecutorService to propagate the {@link SpanManager#currentSpan() currently active span}
      * of callers into the executed calls, using the specified {@link SpanManager}.
      *
      * @param delegate    The executorservice to forward calls to.
-     * @param spanManager The span manager to use.
-     * @return An ExecutorService that propagates active spans from callers into executed calls.
-     * @see #of(ExecutorService)
+     * @param spanManager The manager to propagate spans with.
      */
-    public static SpanPropagatingExecutorService of(ExecutorService delegate, SpanManager spanManager) {
-        return new SpanPropagatingExecutorService(delegate, spanManager);
+    public SpanPropagatingExecutorService(ExecutorService delegate, SpanManager spanManager) {
+        if (delegate == null) throw new NullPointerException("Delegate executor service is <null>.");
+        if (spanManager == null) throw new NullPointerException("SpanManager is <null>.");
+        this.delegate = delegate;
+        this.spanManager = spanManager;
     }
 
     /**

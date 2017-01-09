@@ -29,6 +29,9 @@ public final class DefaultSpanManager implements SpanManager {
     private DefaultSpanManager() {
     }
 
+    /**
+     * @return The singleton instance of the default span manager.
+     */
     public static SpanManager getInstance() {
         return INSTANCE;
     }

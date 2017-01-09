@@ -3,7 +3,6 @@ package io.opentracing.contrib.spanmanager.tracer;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.spanmanager.GlobalSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
 import io.opentracing.propagation.Format;
 
@@ -30,22 +29,10 @@ public final class ManagedSpanTracer implements Tracer {
     private final SpanManager spanManager;
 
     /**
-     * Automatically manages created spans from <code>delegate</code> using the {@link GlobalSpanManager}.
-     *
-     * @param delegate The tracer to be wrapped.
-     * @see #ManagedSpanTracer(Tracer, SpanManager)
-     * @see GlobalSpanManager
-     */
-    public ManagedSpanTracer(Tracer delegate) {
-        this(delegate, GlobalSpanManager.get());
-    }
-
-    /**
      * Automatically manages created spans from <code>delegate</code> using the the specified {@link SpanManager}.
      *
      * @param delegate    The tracer to be wrapped.
-     * @param spanManager The span manager to use.
-     * @see #ManagedSpanTracer(Tracer)
+     * @param spanManager The manager providing span propagation.
      */
     public ManagedSpanTracer(Tracer delegate, SpanManager spanManager) {
         if (delegate == null) throw new NullPointerException("Delegate Tracer is <null>.");

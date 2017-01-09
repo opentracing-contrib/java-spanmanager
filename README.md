@@ -17,9 +17,9 @@ Interface that defines _current_ span management:
 A _default_ SpanManager maintaining a `Stack`-like `ThreadLocal` storage of _linked managed spans_.
 
 Releasing a _linked managed span_ uses the following algorithm:
- 1. If the released span is not the _managed_ span, the _current managed_ span is left alone.
- 2. Otherwise, the first parent that is <em>not yet released</em> is set as the new managed span.
- 3. If no managed parents remain, the managed span is cleared.
+ 1. If the released span is not the _current_ span, the current span is left alone.
+ 2. Otherwise, the first parent that is <em>not yet released</em> is set as the new current span.
+ 3. If no current parents remain, the current span is cleared.
  4. Consecutive `release()` calls for already-released spans will be ignored.
 
 ## Concurrency

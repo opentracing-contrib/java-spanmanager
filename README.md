@@ -60,7 +60,8 @@ This convenience `Tracer` automates managing the _current span_:
         
         @Override
         public String call() {
-            try (Span newSpan = tracer.buildSpan("someCall").asChildOf(spanManager.currentSpan().context()).start()) {
+            Span currentSpan = spanManager.currentSpan();
+            try (Span newSpan = tracer.buildSpan("someCall").asChildOf(currentSpan.context()).start()) {
                 return "New span: " + newSpan + ", parent: " + parent;
             }
         }

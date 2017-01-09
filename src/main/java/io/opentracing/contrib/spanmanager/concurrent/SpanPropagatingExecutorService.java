@@ -1,7 +1,6 @@
 package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
-import io.opentracing.contrib.spanmanager.GlobalSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     }
 
     /**
-     * Propagates the {@link GlobalSpanManager#currentSpan() custom current span} into the runnable
+     * Propagates the {@link SpanManager#currentSpan() custom current span} into the runnable
      * and performs cleanup afterwards.
      * <p>
      * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.
@@ -45,14 +44,13 @@ public class SpanPropagatingExecutorService implements ExecutorService {
      * @param runnable          The runnable to be executed.
      * @param customCurrentSpan The span to be propagated.
      * @return The wrapped runnable to execute with the custom span as current span.
-     * @see GlobalSpanManager
      */
     private Runnable runnableWithCurrentSpan(Runnable runnable, Span customCurrentSpan) {
         return new RunnableWithManagedSpan(runnable, spanManager, customCurrentSpan);
     }
 
     /**
-     * Propagates the {@link GlobalSpanManager#currentSpan() custom current span} into the callable
+     * Propagates the {@link SpanManager#currentSpan() custom current span} into the callable
      * and performs cleanup afterwards.
      * <p>
      * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.

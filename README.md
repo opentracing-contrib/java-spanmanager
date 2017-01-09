@@ -145,12 +145,12 @@ To propagate a `Span` into a new `Thread` can be accomplished as follows:
             Config config = ...;
             Tracer tracer = config.getTracer();
             SpanManager spanManager = config.getSpanManager(); // or DefaultSpanManager.getInstance();
-            Thread example = new ExampleThread(spanManager);
 
             // Start an outer span:
             try (Span appSpan = tracer.buildSpan("main").start();
                     ManagedSpan managed = spanManager.manage(appSpan)) {
             
+                Thread example = new ExampleThread(spanManager);
                 example.start();
                 example.join();
                 

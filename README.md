@@ -1,4 +1,6 @@
-# java-spanmanager
+# opentracing-java-spanmanager
+
+Warning: This library is still a work in progress!
 
 This library provides a way to manage spans and propagate them to other threads.
 

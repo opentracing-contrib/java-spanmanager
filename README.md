@@ -122,10 +122,8 @@ Then the application can propagate this _currentSpan_ into background threads:
         
         @Override
         public String call() {
-            Span currentSpan = spanManager.currentSpan();
-            try (Span newSpan = tracer.buildSpan("someCall").asChildOf(currentSpan.context()).start()) {
-                return "New span: " + newSpan + ", parent: " + parent;
-            }
+            Span currentSpan = spanManager.currentSpan(); // The propagated currentSpan from the scheduling thread
+            // ...
         }
     }
 
@@ -156,11 +154,10 @@ When starting a new span and making it the _currentSpan_, the manual example abo
     }
 ```
 
-The `ManagedSpanTracer` automatically makes any started span the active span
-and also releases it when the span is finished:
+The `ManagedSpanTracer` automatically makes every started span the active span.
+It also releases it again when the span is finished:
 
 ```java
-
     class Caller {
         SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
         Tracer tracer = new ManagedSpanTracer(anyTracer(), spanManager);
@@ -175,6 +172,44 @@ and also releases it when the span is finished:
             } // parent.finish() + ((ManagedSpan) parent).release()   // Performed by ManagedSpanTracer
         }
     }
-
 ```
 
+### Example with asynchronous request / response filters
+
+When asynchronous processing is handled by separate request/response filters,
+a `try-with-resources` code block is insufficient.
+
+Existing filters that start / finish new spans asynchronously can simply 
+be supplied with the `ManagedSpanTracer` around the existing tracer.
+This sets the _currentSpan_ from the request filter
+and calls `release()` automatically from the response filter
+when the existing filter finishes the span.  
+An example would be using the [opentracing jaxrs filters](https://github.com/opentracing-contrib/java-jaxrs) 
+in combination with the ManagedSpanTracer:
+```java
+    // Add example when opentracing jaxrs library stabilizes
+```
+
+Alternatively, the following hypothetic filter pair could be used on an asynchronous server:  
+Handling the request:
+```java
+    final SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
+    void onRequest(RequestContext reqCtx) {
+        Span span = ... // either obtain Span from previous filter or start from the request
+        ManagedSpan managedSpan = spanManager.manage(span); // span is now activeSpan.
+        reqCtx.put(SOMEKEY, managedSpan);
+    }
+```
+
+For the response:
+```java
+    final SpanManager spanManager = ...
+    void onResponse(RequestContext reqCtx, ResponseContext resCtx) {
+        spanManager.clear(); // Clear stack containing the currentSpan if this is a boundary-filter
+        // or: 
+        // ManagedSpan managedSpan = reqCtx.get(SOMEKEY);
+        // managedSpan.release();
+        
+        // If the corresponding request filter starts a span, don't forget to call span.finish() here!
+    }
+```

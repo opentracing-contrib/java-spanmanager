@@ -18,8 +18,11 @@ import io.opentracing.Span;
 import java.io.Closeable;
 
 /**
- * Manager to {@link #manage(Span) manage} and {@link ManagedSpan#release() release}
- * {@linkplain Span spans} and accessing the {@link #currentSpan() currently-managed span}.
+ * Defines <em>{@linkplain #currentSpan() current span}</em> management.
+ * <p>
+ * A SpanManager separates the creation of a {@linkplain Span} from its use later on.
+ * This relieves application developers from passing the current span around throughout their code.
+ * Only tracing-related code will need access to a SpanManager reference. This can be provided just like any dependency.
  */
 public interface SpanManager {
 

@@ -6,7 +6,14 @@ This library provides a way to manage spans and propagate them to other threads.
 
 ## SpanManager
 
-Interface that defines _current_ span management:
+Defines _current span_ management.
+
+A SpanManager separates the creation of a `Span` from its use later on.
+This relieves application developers from passing the current span around throughout their code.
+Only tracing-related code will need access to a SpanManager reference. This can be provided just like any dependency.
+
+SpanManager provides the following methods:
+
  1. `manage(span)` makes the given span the _current_ managed span.  
     Returns a `ManagedSpan` containing a `release()` method
     to later 'unmanage' the span with.

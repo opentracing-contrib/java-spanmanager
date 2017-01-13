@@ -88,7 +88,7 @@ remembered by the `Runnable`:
         
         @Override
         public void run() {
-            try (ManagedSpan parent = spanManager.manage(currentSpanFromCallingThread)) { // propagate currentSpan()
+            try (ManagedSpan parent = spanManager.manage(currentSpanFromCallingThread)) {
 
                 // Any background code that requires tracing
                 // and may use spanManager.currentSpan().
@@ -109,7 +109,7 @@ Then the application can propagate this _currentSpan_ into background threads:
             ExampleRunnable runnable = new ExampleRunnable(spanManager);
 
             try (Span appSpan = tracer.buildSpan("main").start();           // start appSpan
-                    ManagedSpan managed = spanManager.manage(appSpan)) {    // set currentSpan() to appSpan
+                    ManagedSpan managed = spanManager.manage(appSpan)) {    // update currentSpan
             
                 Thread example = new Thread(runnable.withCurrentSpan());
                 example.start();
@@ -131,21 +131,21 @@ Then the application can propagate this _currentSpan_ into background threads:
         
         @Override
         public String call() {
-            Span currentSpan = spanManager.currentSpan(); // The propagated currentSpan from the scheduling thread
+            Span currentSpan = spanManager.currentSpan(); // Propagated span from caller
             // ...
         }
     }
 
     class Caller {
         SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance(); 
-        ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
+        ExecutorService threadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
 
         void run() {
             // ...code that sets the current Span somewhere:
             try (ManagedSpan current = spanManager.manage(someSpan)) {
                 
                 // scheduling the traced call:
-                Future<String> result = propagatingThreadpool.submit(new TracedCall());
+                Future<String> result = threadpool.submit(new TracedCall());
                 
             }
         }
@@ -170,15 +170,15 @@ It also releases it again when the span is finished:
     class Caller {
         SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
         Tracer tracer = new ManagedSpanTracer(anyTracer(), spanManager);
-        ExecutorService propagatingThreadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
+        ExecutorService threadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
 
         void run() {
-            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent == spanManager.currentSpan()
+            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent == currentSpan
             
                 // Scheduling the traced call:
-                Future<String> result = propagatingThreadpool.submit(new TracedCall());
+                Future<String> result = threadpool.submit(new TracedCall());
                 
-            } // parent.finish() + ((ManagedSpan) parent).release()   // Performed by ManagedSpanTracer
+            } // parent.finish() + ((ManagedSpan) parent).release()
         }
     }
 ```

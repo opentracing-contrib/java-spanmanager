@@ -28,7 +28,7 @@
 
     <!-- Project information -->
     <name>SpanManager library</name>
-    <description>Library for managing the currently active span and propagating it accross threads</description>
+    <description>Manager of current span and propagating it accross threads</description>
     <url>https://github.com/opentracing-contrib/java-activespan</url>
     <inceptionYear>2017</inceptionYear>
 

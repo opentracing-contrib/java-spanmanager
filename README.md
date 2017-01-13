@@ -1,6 +1,8 @@
-# opentracing-java-spanmanager
+[![Build Status][ci-img]][ci] [![Released Version][maven-img]][maven]
 
-Warning: This library is still a work in progress!
+# Span manager for Java
+
+:heavy_exclamation_mark: **Warning:** This library is still a work in progress!
 
 This library provides a way to manage spans and propagate them to other threads.
 
@@ -220,3 +222,8 @@ For the response:
         // If the corresponding request filter starts a span, don't forget to call span.finish() here!
     }
 ```
+
+  [ci-img]: https://img.shields.io/travis/opentracing-contrib/java-activespan/master.svg
+  [ci]: https://travis-ci.org/opentracing-contrib/java-activespan
+  [maven-img]: https://img.shields.io/maven-central/v/io.opentracing.contrib/java-spanmanager.svg
+  [maven]: http://search.maven.org/#search%7Cga%7C1%7Cjava-spanmanager

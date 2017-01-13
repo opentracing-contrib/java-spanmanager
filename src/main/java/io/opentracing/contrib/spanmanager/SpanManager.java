@@ -21,7 +21,7 @@ import java.io.Closeable;
  * Defines <em>{@linkplain #currentSpan() current span}</em> management.
  * <p>
  * A SpanManager separates the creation of a {@linkplain Span} from its use later on.
- * This relieves application developers from passing the current span around throughout their code.
+ * This relieves application developers from passing the current span around through their code.
  * Only tracing-related code will need access to a SpanManager reference, provided as an ordinary dependency.
  */
 public interface SpanManager {

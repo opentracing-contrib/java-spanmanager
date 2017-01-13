@@ -10,7 +10,7 @@ Defines _current span_ management.
 
 A SpanManager separates the creation of a `Span` from its use later on.
 This relieves application developers from passing the current span around throughout their code.
-Only tracing-related code will need access to a SpanManager reference. This can be provided just like any dependency.
+Only tracing-related code will need access to a SpanManager reference, provided as an ordinary dependency.
 
 SpanManager provides the following methods:
 

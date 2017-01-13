@@ -21,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Default {@link SpanManager} implementation using {@link ThreadLocal} storage,
+ * Default {@link SpanManager} implementation using {@link ThreadLocal} storage
  * maintaining a stack-like structure of linked managed spans.
  * <p>
  * The linked managed spans provide the following stack unwinding algorithm:

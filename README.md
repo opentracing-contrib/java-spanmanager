@@ -41,7 +41,7 @@ This `ExecutorService` _propagates the current span_
 from the caller into each call that is executed.  
 The current span of the caller is obtained from the configured `SpanManager`.
 
-_Please Note:_ The active span is merely _propagated_ (as-is).  
+_Please Note:_ The current span is merely _propagated_ (as-is).  
 It is explicitly **not** finished when the calls end,
 nor will new spans be automatically related to the propagated span.
 
@@ -163,7 +163,7 @@ When starting a new span and making it the _currentSpan_, the manual example abo
     }
 ```
 
-The `ManagedSpanTracer` automatically makes every started span the active span.
+The `ManagedSpanTracer` automatically makes every started span the current span.
 It also releases it again when the span is finished:
 
 ```java
@@ -205,7 +205,7 @@ Handling the request:
     final SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
     void onRequest(RequestContext reqCtx) {
         Span span = ... // either obtain Span from previous filter or start from the request
-        ManagedSpan managedSpan = spanManager.manage(span); // span is now activeSpan.
+        ManagedSpan managedSpan = spanManager.manage(span); // span is now currentSpan.
         reqCtx.put(SOMEKEY, managedSpan);
     }
 ```

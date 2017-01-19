@@ -40,7 +40,7 @@ final class AutoReleasingManagedSpan implements Span, SpanManager.ManagedSpan {
     }
 
     /**
-     * Releases this currently active ManagedSpan.
+     * Releases this current ManagedSpan.
      */
     @Override
     public void release() {

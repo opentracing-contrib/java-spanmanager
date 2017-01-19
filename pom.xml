@@ -29,7 +29,7 @@
     <!-- Project information -->
     <name>SpanManager library</name>
     <description>Manager of current span and propagating it accross threads</description>
-    <url>https://github.com/opentracing-contrib/java-activespan</url>
+    <url>https://github.com/opentracing-contrib/java-spanmanager</url>
     <inceptionYear>2017</inceptionYear>
 
     <licenses>
@@ -69,20 +69,20 @@
     </developers>
 
     <scm>
-        <url>https://github.com/opentracing-contrib/java-activespan/tree/master</url>
-        <connection>scm:git:git://github.com/opentracing-contrib/java-activespan.git</connection>
-        <developerConnection>scm:git:git@github.com:opentracing-contrib/java-activespan.git</developerConnection>
+        <url>https://github.com/opentracing-contrib/java-spanmanager/tree/master</url>
+        <connection>scm:git:git://github.com/opentracing-contrib/java-spanmanager.git</connection>
+        <developerConnection>scm:git:git@github.com:opentracing-contrib/java-spanmanager.git</developerConnection>
     </scm>
 
     <issueManagement>
         <system>Github</system>
-        <url>https://github.com/opentracing-contrib/java-activespan/issues</url>
+        <url>https://github.com/opentracing-contrib/java-spanmanager/issues</url>
     </issueManagement>
 
     <distributionManagement>
         <repository>
             <id>bintray</id>
-            <url>https://api.bintray.com/maven/opentracing/maven/java-activespan/;publish=1</url>
+            <url>https://api.bintray.com/maven/opentracing/maven/java-spanmanager/;publish=1</url>
         </repository>
         <snapshotRepository>
             <id>jfrog-snapshots</id>
@@ -247,7 +247,7 @@
                 <configuration>
                     <subject>opentracing</subject>
                     <repo>maven</repo>
-                    <packageName>java-activespan</packageName>
+                    <packageName>java-spanmanager</packageName>
                 </configuration>
             </plugin>
         </plugins>

@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Propagates the {@link SpanManager#currentSpan() currently active span} from the caller
+ * Propagates the {@link SpanManager#currentSpan() current span} from the caller
  * into each call that is executed.
  * <p>
- * <em>Note:</em> The active span is merely propagated.
+ * <em>Note:</em> The current span is merely propagated.
  * It is explicitly <b>not</b> finished when the calls end,
  * nor will new spans be automatically related to the propagated span.
  */
@@ -34,7 +34,7 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     private final SpanManager spanManager;
 
     /**
-     * Wraps the delegate ExecutorService to propagate the {@link SpanManager#currentSpan() currently active span}
+     * Wraps the delegate ExecutorService to propagate the {@link SpanManager#currentSpan() current span}
      * of callers into the executed calls, using the specified {@link SpanManager}.
      *
      * @param delegate    The executorservice to forward calls to.

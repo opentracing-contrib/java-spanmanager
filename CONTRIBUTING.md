@@ -1,4 +1,4 @@
-# Contributing to opentracing-contrib / java-activespan
+# Contributing to opentracing-contrib / java-spanmanager
 
 If you would like to contribute code you can do so through GitHub by forking the repository
 and sending a pull request (on a branch other than `master` or `gh-pages`).
@@ -7,7 +7,7 @@ and sending a pull request (on a branch other than `master` or `gh-pages`).
 ## License
 
 By contributing your code, you agree to license your contribution under the terms of the APLv2:
-https://github.com/opentracing-contrib/java-activespan/blob/master/LICENSE
+https://github.com/opentracing-contrib/java-spanmanager/blob/master/LICENSE
 
 All files are released with the Apache 2.0 license.
 

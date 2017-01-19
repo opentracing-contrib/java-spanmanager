@@ -47,7 +47,7 @@ final class ManagedSpanBuilder implements SpanBuilder {
      * Replaces the {@link #delegate} SpanBuilder by a delegated-method result.
      *
      * @param spanBuilder The builder returned from the delegate (normally '== delegate').
-     * @return This re-wrapped ActiveSpanBuilder.
+     * @return This re-wrapped ManagedSpanBuilder.
      */
     SpanBuilder rewrap(SpanBuilder spanBuilder) {
         if (spanBuilder != null) {
@@ -59,7 +59,7 @@ final class ManagedSpanBuilder implements SpanBuilder {
     /**
      * Starts the built Span and {@link SpanManager#manage(Span) activates} it.
      *
-     * @return a new 'currently active' Span that deactivates itself upon <em>finish</em> or <em>close</em> calls.
+     * @return a new 'current' Span that releases itself upon <em>finish</em> or <em>close</em> calls.
      * @see SpanManager#manage(Span)
      * @see AutoReleasingManagedSpan#release()
      */

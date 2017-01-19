@@ -44,7 +44,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newFixedThreadPool(int) fixed threadpool} that propagates
-     * the active span into the started threads.
+     * the current span into the started threads.
      *
      * @param nThreads    the number of threads in the pool
      * @param spanManager the manager for span propagation.
@@ -57,7 +57,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newFixedThreadPool(int, ThreadFactory) fixed threadpool} that propagates
-     * the active span into the started threads.
+     * the current span into the started threads.
      *
      * @param nThreads      the number of threads in the pool
      * @param threadFactory the factory to use when creating new threads
@@ -72,7 +72,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newSingleThreadExecutor() single-threaded executor} that propagates
-     * the active span into the started thread.
+     * the current span into the started thread.
      *
      * @param spanManager the manager for span propagation.
      * @return the newly created single-theaded executor
@@ -84,7 +84,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newSingleThreadExecutor(ThreadFactory) single-threaded executor}
-     * that propagates the active span into the started thread.
+     * that propagates the current span into the started thread.
      *
      * @param threadFactory the factory to use when creating new threads
      * @param spanManager   the manager for span propagation.
@@ -98,7 +98,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newCachedThreadPool() cached threadpool} that propagates
-     * the active span into the started threads.
+     * the current span into the started threads.
      *
      * @param spanManager the manager for span propagation.
      * @return the newly created thread pool
@@ -110,7 +110,7 @@ public final class SpanPropagatingExecutors {
 
     /**
      * This method returns a {@link Executors#newCachedThreadPool(ThreadFactory) cached threadpool} that propagates
-     * the active span into the started threads.
+     * the current span into the started threads.
      *
      * @param threadFactory the factory to use when creating new threads
      * @param spanManager   the manager for span propagation.

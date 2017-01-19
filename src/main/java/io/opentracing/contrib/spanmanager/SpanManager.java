@@ -47,7 +47,7 @@ public interface SpanManager {
     /**
      * Unconditional cleanup of all managed spans including any parents.
      * <p>
-     * This allows boundary filters to release all active spans
+     * This allows boundary filters to release all current spans
      * before relinquishing control over their process,
      * which may end up repurposed by a threadpool.
      *

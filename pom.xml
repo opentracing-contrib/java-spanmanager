@@ -69,9 +69,10 @@
     </developers>
 
     <scm>
-        <url>https://github.com/opentracing-contrib/java-spanmanager/tree/master</url>
-        <connection>scm:git:git://github.com/opentracing-contrib/java-spanmanager.git</connection>
-        <developerConnection>scm:git:git@github.com:opentracing-contrib/java-spanmanager.git</developerConnection>
+        <url>https://github.com/opentracing-contrib/java-spanmanager</url>
+        <connection>scm:git:https://github.com/opentracing-contrib/java-spanmanager.git</connection>
+        <developerConnection>scm:git:https://github.com/opentracing-contrib/java-spanmanager.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
@@ -137,36 +138,13 @@
                     <artifactId>maven</artifactId>
                     <version>${maven-plugin.version}</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${maven-compiler-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${maven-source-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${maven-javadoc-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>${maven-release-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>io.zipkin.centralsync-maven-plugin</groupId>
-                    <artifactId>centralsync-maven-plugin</artifactId>
-                    <version>${centralsync-maven-plugin.version}</version>
-                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${build.java.version}</source>
                     <target>${build.java.version}</target>
@@ -211,7 +189,9 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
                 <configuration>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
@@ -222,6 +202,7 @@
             <plugin>
                 <groupId>io.zipkin.centralsync-maven-plugin</groupId>
                 <artifactId>centralsync-maven-plugin</artifactId>
+                <version>${centralsync-maven-plugin.version}</version>
                 <configuration>
                     <subject>opentracing</subject>
                     <repo>maven</repo>
@@ -237,7 +218,9 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -248,7 +231,9 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>generate-javadoc</id>

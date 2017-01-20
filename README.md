@@ -225,5 +225,5 @@ For the response:
 
   [ci-img]: https://img.shields.io/travis/opentracing-contrib/java-spanmanager/master.svg
   [ci]: https://travis-ci.org/opentracing-contrib/java-spanmanager
-  [maven-img]: https://img.shields.io/maven-central/v/io.opentracing.contrib/java-spanmanager.svg
-  [maven]: http://search.maven.org/#search%7Cga%7C1%7Cjava-spanmanager
+  [maven-img]: https://img.shields.io/maven-central/v/io.opentracing.contrib/opentracing-spanmanager.svg
+  [maven]: http://search.maven.org/#search%7Cga%7C1%7Copentracing-spanmanager

@@ -39,6 +39,8 @@ public final class DefaultSpanManager implements SpanManager {
     private static final DefaultSpanManager INSTANCE = new DefaultSpanManager();
     private final ThreadLocal<LinkedManagedSpan> managed = new ThreadLocal<LinkedManagedSpan>();
 
+    private final ManagedSpan NOOP = new LinkedManagedSpan(NoopSpan.INSTANCE, null);
+
     private DefaultSpanManager() {
     }
 
@@ -70,9 +72,12 @@ public final class DefaultSpanManager implements SpanManager {
     }
 
     @Override
-    public Span currentSpan() {
-        LinkedManagedSpan current = refreshCurrent();
-        return current != null && current.span != null ? current.span : NoopSpan.INSTANCE;
+    public SpanManager.ManagedSpan currentSpan() {
+        SpanManager.ManagedSpan span = refreshCurrent();
+        if (span == null || span.getSpan() == null) {
+            span = NOOP;
+        }
+        return span;
     }
 
     @Override

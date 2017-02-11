@@ -38,7 +38,6 @@ public class SpanPropagatingExecutorServiceMockTest {
     ExecutorService mockExecutorService;
     SpanManager mockSpanManager;
     Span mockSpan;
-    SpanManager.ManagedSpan mockManagedSpan;
 
     SpanPropagatingExecutorService service;
 
@@ -47,9 +46,7 @@ public class SpanPropagatingExecutorServiceMockTest {
         mockExecutorService = mock(ExecutorService.class);
         mockSpanManager = mock(SpanManager.class);
         mockSpan = mock(Span.class);
-        mockManagedSpan = mock(SpanManager.ManagedSpan.class);
-        when(mockSpanManager.currentSpan()).thenReturn(mockManagedSpan);
-        when(mockManagedSpan.getSpan()).thenReturn(mockSpan);
+        when(mockSpanManager.currentSpan()).thenReturn(mockSpan);
 
         service = new SpanPropagatingExecutorService(mockExecutorService, mockSpanManager);
     }

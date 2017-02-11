@@ -150,14 +150,14 @@ public class SpanPropagatingExecutorServiceTest {
 
         @Override
         public void run() {
-            span = spanManager.currentSpan().getSpan();
+            span = spanManager.currentSpan();
         }
     }
 
     static class CurrentSpanCallable implements Callable<Span> {
         @Override
         public Span call() {
-            return spanManager.currentSpan().getSpan();
+            return spanManager.currentSpan();
         }
     }
 

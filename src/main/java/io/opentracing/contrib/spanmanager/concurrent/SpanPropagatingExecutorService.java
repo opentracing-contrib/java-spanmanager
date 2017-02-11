@@ -80,44 +80,44 @@ public class SpanPropagatingExecutorService implements ExecutorService {
 
     @Override
     public void execute(Runnable command) {
-        delegate.execute(runnableWithCurrentSpan(command, spanManager.currentSpan().getSpan()));
+        delegate.execute(runnableWithCurrentSpan(command, spanManager.currentSpan()));
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan().getSpan()));
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan()));
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan().getSpan()), result);
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan()), result);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        return delegate.submit(callableWithCurrentSpan(task, spanManager.currentSpan().getSpan()));
+        return delegate.submit(callableWithCurrentSpan(task, spanManager.currentSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan().getSpan()));
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan().getSpan()), timeout, unit);
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan()), timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan().getSpan()));
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan()));
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan().getSpan()), timeout, unit);
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan()), timeout, unit);
     }
 
     @Override

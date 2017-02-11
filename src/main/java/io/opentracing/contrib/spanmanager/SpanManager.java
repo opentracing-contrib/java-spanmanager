@@ -29,10 +29,10 @@ public interface SpanManager {
     /**
      * Return the currently-managed {@link Span}.
      *
-     * @return The current Span, or the managed <code>NoopSpan</code> if there is no managed span.
+     * @return The current Span, or the <code>NoopSpan</code> if there is no managed span.
      * @see SpanManager#manage(Span)
      */
-    ManagedSpan currentSpan();
+    Span currentSpan();
 
     /**
      * Makes span the <em>current span</em> within the running process.
@@ -43,6 +43,14 @@ public interface SpanManager {
      * @see ManagedSpan#release()
      */
     ManagedSpan manage(Span span);
+
+    /**
+     * Return the current <code>ManagedSpan</code>.
+     *
+     * @return The current ManagedSpan
+     * @see SpanManager#manage(Span)
+     */
+    ManagedSpan current();
 
     /**
      * Unconditional cleanup of all managed spans including any parents.

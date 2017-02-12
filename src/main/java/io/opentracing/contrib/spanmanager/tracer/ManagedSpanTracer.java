@@ -20,7 +20,7 @@ import io.opentracing.contrib.spanmanager.SpanManager;
 import io.opentracing.propagation.Format;
 
 /**
- * Convenience {@link Tracer} that automates managing the {@linkplain SpanManager#currentSpan() current span}:
+ * Convenience {@link Tracer} that automates managing the {@linkplain SpanManager#current() current managed span}:
  * <ol>
  * <li>It is a wrapper that forwards all calls to another {@link Tracer} implementation.</li>
  * <li>{@linkplain Span Spans} created with this tracer are

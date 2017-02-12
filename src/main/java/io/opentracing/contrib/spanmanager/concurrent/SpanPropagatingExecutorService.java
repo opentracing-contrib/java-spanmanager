@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Propagates the {@link SpanManager#currentSpan() current span} from the caller
+ * Propagates the {@link SpanManager#current() current managed span} from the caller
  * into each call that is executed.
  * <p>
  * <em>Note:</em> The current span is merely propagated.
@@ -34,7 +34,7 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     private final SpanManager spanManager;
 
     /**
-     * Wraps the delegate ExecutorService to propagate the {@link SpanManager#currentSpan() current span}
+     * Wraps the delegate ExecutorService to propagate the {@link SpanManager#current() managed span}
      * of callers into the executed calls, using the specified {@link SpanManager}.
      *
      * @param delegate    The executorservice to forward calls to.
@@ -48,7 +48,7 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     }
 
     /**
-     * Propagates the {@link SpanManager#currentSpan() custom current span} into the runnable
+     * Propagates the {@link SpanManager#current() custom current span} into the runnable
      * and performs cleanup afterwards.
      * <p>
      * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.
@@ -63,7 +63,7 @@ public class SpanPropagatingExecutorService implements ExecutorService {
     }
 
     /**
-     * Propagates the {@link SpanManager#currentSpan() custom current span} into the callable
+     * Propagates the {@link SpanManager#current() custom current span} into the callable
      * and performs cleanup afterwards.
      * <p>
      * <em>Note:</em> The <code>customCurrentSpan</code> is merely propagated.
@@ -80,44 +80,44 @@ public class SpanPropagatingExecutorService implements ExecutorService {
 
     @Override
     public void execute(Runnable command) {
-        delegate.execute(runnableWithCurrentSpan(command, spanManager.currentSpan()));
+        delegate.execute(runnableWithCurrentSpan(command, spanManager.current().getSpan()));
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan()));
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        return delegate.submit(runnableWithCurrentSpan(task, spanManager.currentSpan()), result);
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.current().getSpan()), result);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        return delegate.submit(callableWithCurrentSpan(task, spanManager.currentSpan()));
+        return delegate.submit(callableWithCurrentSpan(task, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan()));
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.currentSpan()), timeout, unit);
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()), timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan()));
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.currentSpan()), timeout, unit);
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()), timeout, unit);
     }
 
     @Override

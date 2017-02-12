@@ -15,6 +15,8 @@ package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
 import io.opentracing.contrib.spanmanager.SpanManager;
+import io.opentracing.contrib.spanmanager.SpanManager.ManagedSpan;
+
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +40,7 @@ public class SpanPropagatingExecutorServiceMockTest {
     ExecutorService mockExecutorService;
     SpanManager mockSpanManager;
     Span mockSpan;
+    ManagedSpan mockManagedSpan;
 
     SpanPropagatingExecutorService service;
 
@@ -46,7 +49,9 @@ public class SpanPropagatingExecutorServiceMockTest {
         mockExecutorService = mock(ExecutorService.class);
         mockSpanManager = mock(SpanManager.class);
         mockSpan = mock(Span.class);
-        when(mockSpanManager.currentSpan()).thenReturn(mockSpan);
+        mockManagedSpan = mock(ManagedSpan.class);
+        when(mockManagedSpan.getSpan()).thenReturn(mockSpan);
+        when(mockSpanManager.current()).thenReturn(mockManagedSpan);
 
         service = new SpanPropagatingExecutorService(mockExecutorService, mockSpanManager);
     }
@@ -62,7 +67,7 @@ public class SpanPropagatingExecutorServiceMockTest {
 
         service.execute(runnable);
 
-        verify(mockSpanManager).currentSpan(); // current span must be propagated
+        verify(mockSpanManager).current(); // current span must be propagated
         verify(mockExecutorService).execute(any(RunnableWithManagedSpan.class)); // into RunnableWithManagedSpan
     }
 
@@ -74,7 +79,7 @@ public class SpanPropagatingExecutorServiceMockTest {
 
         assertThat(service.submit(runnable), is(sameInstance(future)));
 
-        verify(mockSpanManager).currentSpan(); // current span must be propagated
+        verify(mockSpanManager).current(); // current span must be propagated
         verify(mockExecutorService).submit(any(RunnableWithManagedSpan.class)); // into RunnableWithManagedSpan
     }
 
@@ -86,7 +91,7 @@ public class SpanPropagatingExecutorServiceMockTest {
 
         assertThat(service.submit(callable), is(sameInstance(future)));
 
-        verify(mockSpanManager).currentSpan(); // current span must be propagated
+        verify(mockSpanManager).current(); // current span must be propagated
         verify(mockExecutorService).submit(any(CallableWithManagedSpan.class)); // into CallableWithManagedSpan
     }
 
@@ -98,7 +103,7 @@ public class SpanPropagatingExecutorServiceMockTest {
 
         assertThat(service.invokeAll(callables), is(sameInstance(futures)));
 
-        verify(mockSpanManager, times(1)).currentSpan(); // current span must be obtained once
+        verify(mockSpanManager, times(1)).current(); // current span must be obtained once
         verify(mockExecutorService).invokeAll(anyCollection());
     }
 

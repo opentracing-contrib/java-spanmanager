@@ -46,7 +46,7 @@ public interface SpanManager {
     ManagedSpan manage(Span span);
 
     /**
-     * Return the current <{@link ManagedSpan}.
+     * Return the current {@link ManagedSpan}.
      *
      * @return The current ManagedSpan or the managed <code>NoopSpan</code> if there is no managed span.
      * @see SpanManager#manage(Span)

@@ -15,7 +15,6 @@ package io.opentracing.contrib.spanmanager.concurrent;
 
 import io.opentracing.Span;
 import io.opentracing.contrib.spanmanager.SpanManager;
-import io.opentracing.contrib.spanmanager.SpanManager.ManagedSpan;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -81,60 +80,44 @@ public class SpanPropagatingExecutorService implements ExecutorService {
 
     @Override
     public void execute(Runnable command) {
-        ManagedSpan current = spanManager.current();
-        delegate.execute(runnableWithCurrentSpan(command,
-                current != null ? current.getSpan() : null));
+        delegate.execute(runnableWithCurrentSpan(command, spanManager.current().getSpan()));
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        ManagedSpan current = spanManager.current();
-        return delegate.submit(runnableWithCurrentSpan(task, 
-                current != null ? current.getSpan() : null));
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        ManagedSpan current = spanManager.current();
-        return delegate.submit(runnableWithCurrentSpan(task,
-                current != null ? current.getSpan() : null), result);
+        return delegate.submit(runnableWithCurrentSpan(task, spanManager.current().getSpan()), result);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        ManagedSpan current = spanManager.current();
-        return delegate.submit(callableWithCurrentSpan(task,
-                current != null ? current.getSpan() : null));
+        return delegate.submit(callableWithCurrentSpan(task, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        ManagedSpan current = spanManager.current();
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks,
-                current != null ? current.getSpan() : null));
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        ManagedSpan current = spanManager.current();
-        return delegate.invokeAll(tasksWithCurrentSpan(tasks,
-                current != null ? current.getSpan() : null), timeout, unit);
+        return delegate.invokeAll(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()), timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        ManagedSpan current = spanManager.current();
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks,
-                current != null ? current.getSpan() : null));
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()));
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        ManagedSpan current = spanManager.current();
-        return delegate.invokeAny(tasksWithCurrentSpan(tasks,
-                current != null ? current.getSpan() : null), timeout, unit);
+        return delegate.invokeAny(tasksWithCurrentSpan(tasks, spanManager.current().getSpan()), timeout, unit);
     }
 
     @Override

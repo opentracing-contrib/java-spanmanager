@@ -40,7 +40,7 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
@@ -58,7 +58,7 @@ public class DefaultSpanManagerTest {
         assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     @Test
@@ -66,7 +66,7 @@ public class DefaultSpanManagerTest {
         Span span1 = mock(Span.class);
         Span span2 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
@@ -82,7 +82,7 @@ public class DefaultSpanManagerTest {
         managed2.release();
         managed1.release();
         managed2.release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
     }
 
 
@@ -92,7 +92,7 @@ public class DefaultSpanManagerTest {
         Span span2 = null;
         Span span3 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
@@ -110,7 +110,7 @@ public class DefaultSpanManagerTest {
         assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
@@ -138,7 +138,7 @@ public class DefaultSpanManagerTest {
         assertThat("skipped span2 (already-released)", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     /**
@@ -154,7 +154,7 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
@@ -187,20 +187,23 @@ public class DefaultSpanManagerTest {
         assertThat("popped span2+3", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     @Test
     public void testExplicitRelease() {
         Span span1 = mock(Span.class);
 
-        assertNull("empty stack", manager.current());
+        assertNull("empty stack", manager.current().getSpan());
 
         manager.manage(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         manager.current().release();
-        assertNull("popped span1", manager.current());
+        assertNull("popped span1", manager.current().getSpan());
+
+        // Try releasing - should not have any effect
+        manager.current().release();
     }
 
 }

@@ -48,7 +48,7 @@ public interface SpanManager {
     /**
      * Return the current {@link ManagedSpan}.
      *
-     * @return The current ManagedSpan or null if there is no managed span.
+     * @return The current ManagedSpan
      * @see SpanManager#manage(Span)
      */
     ManagedSpan current();
@@ -76,7 +76,7 @@ public interface SpanManager {
         /**
          * The span that became the managed span at some point.
          *
-         * @return The contained span to be released.
+         * @return The contained span to be released, or null if no span is being managed
          */
         Span getSpan();
 

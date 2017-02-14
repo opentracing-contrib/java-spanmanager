@@ -22,33 +22,29 @@ import java.io.Closeable;
  * <p>
  * A SpanManager separates the creation of a {@linkplain Span} from its use later on.
  * This relieves application developers from passing the current span around through their code.
- * Only tracing-related code will need access to a SpanManager reference, provided as an ordinary dependency.
+ * Only tracing-related code will need access to a SpanManager reference,
+ * which can be provided as an ordinary dependency.
  */
 public interface SpanManager {
-
-    /**
-     * Return the currently-managed {@link Span}.
-     *
-     * @return The current Span, or the <code>NoopSpan</code> if there is no managed span.
-     * @see SpanManager#manage(Span)
-     * @deprecated Use SpanManager#current() instead
-     */
-    Span currentSpan();
 
     /**
      * Makes span the <em>current span</em> within the running process.
      *
      * @param span The span to become the current span.
-     * @return A managed object to release the current span with.
-     * @see SpanManager#currentSpan()
+     * @return A managed object containing the current span and a way to release it again.
+     * @see SpanManager#current()
      * @see ManagedSpan#release()
      */
     ManagedSpan manage(Span span);
 
     /**
-     * Return the current {@link ManagedSpan}.
+     * Retrieve the current {@link ManagedSpan managed span}.
+     * <p>
+     * If there is no current managed span, an 'empty' managed span instance is returned
+     * for which {@link ManagedSpan#release() release()} has no effects
+     * and whose {@link ManagedSpan#getSpan() getSpan()} method always returns {@code null}.
      *
-     * @return The current ManagedSpan
+     * @return The current managed span
      * @see SpanManager#manage(Span)
      */
     ManagedSpan current();
@@ -65,6 +61,21 @@ public interface SpanManager {
     void clear();
 
     /**
+     * Return the currently-managed {@link Span}.
+     * <p>
+     * Please note that this method is due to be removed in the next release.
+     * The currently-managed span can also be obtained through
+     * {@link #current()}.{@link ManagedSpan#getSpan() getSpan()}
+     * which is safe, as curren
+     *
+     * @return The current Span, or the <code>NoopSpan</code> if there is no managed span.
+     * @see SpanManager#manage(Span)
+     * @see SpanManager#current()
+     * @deprecated Please use <code>SpanManager.current().getSpan()</code> instead
+     */
+    Span currentSpan();
+
+    /**
      * To {@linkplain #release() release} a {@link SpanManager#manage(Span) managed span} with.
      * <p>
      * It must be possible to repeatedly call {@linkplain #release()} without side effects.
@@ -76,7 +87,7 @@ public interface SpanManager {
         /**
          * The span that became the managed span at some point.
          *
-         * @return The contained span to be released, or null if no span is being managed
+         * @return The contained span to be released, or <code>null</code> if no span is being managed.
          */
         Span getSpan();
 

@@ -19,8 +19,8 @@ SpanManager provides the following methods:
  1. `manage(span)` makes the given span the _current_ managed span.  
     Returns a `ManagedSpan` containing a `release()` method
     to later 'unmanage' the span with.
- 2. `currentSpan()` returns the _current_ managed span,
-    or the `NoopSpan` if no span is managed.
+ 2. `current()` returns the _current_ `ManagedSpan`,
+    or an empty managed span object without a `Span` if no span is managed.
  3. `clear()` provides unconditional cleanup of _all managed spans_ for the current process.
 
 ## DefaultSpanManager
@@ -65,21 +65,21 @@ This convenience `Tracer` automates managing the _current span_:
 
 ### Manually propagating any Span into a background thread
 
-To propagate a `Span` into a new `Thread`, the _currentSpan_ from the caller must be
+To propagate a `Span` into a new `Thread`, the _current_ Span from the caller must be
 remembered by the `Runnable`:
 
 ```java
     class ExampleRunnable implements Runnable {
         private final SpanManager spanManager;
-        private final Span currentSpanFromCallingThread;
+        private final Span currentSpanFromCaller;
         
         ExampleRunnable(SpanManager spanManager) {
             this(spanManager, NoopSpan.INSTANCE);
         }
         
-        private ExampleRunnable(SpanManager spanManager, Span currentSpanFromCallingThread) {
+        private ExampleRunnable(SpanManager spanManager, Span currentSpanFromCaller) {
             this.spanManager = spanManager;
-            this.currentSpanFromCallingThread = currentSpanFromCallingThread;
+            this.currentSpanFromCaller = currentSpanFromCaller;
         }
         
         ExampleRunnable withCurrentSpan() {
@@ -88,17 +88,17 @@ remembered by the `Runnable`:
         
         @Override
         public void run() {
-            try (ManagedSpan parent = spanManager.manage(currentSpanFromCallingThread)) {
+            try (ManagedSpan parent = spanManager.manage(currentSpanFromCaller)) {
 
                 // Any background code that requires tracing
-                // and may use spanManager.currentSpan().
+                // and may use spanManager.current().getSpan()
                 
-            } // parent.release() restores spanManager.currentSpan() to NoopSpan in new thread.
+            } // parent.release() restores spanManager.current()
         }
     }
 ```
 
-Then the application can propagate this _currentSpan_ into background threads:
+Then the application can propagate this _current_ Span into background threads:
 
 ```java
     class App {
@@ -109,7 +109,7 @@ Then the application can propagate this _currentSpan_ into background threads:
             ExampleRunnable runnable = new ExampleRunnable(spanManager);
 
             try (Span appSpan = tracer.buildSpan("main").start();           // start appSpan
-                    ManagedSpan managed = spanManager.manage(appSpan)) {    // update currentSpan
+                    ManagedSpan managed = spanManager.manage(appSpan)) {    // update current Span
             
                 Thread example = new Thread(runnable.withCurrentSpan());
                 example.start();
@@ -123,7 +123,7 @@ Then the application can propagate this _currentSpan_ into background threads:
 
 ```
 
-### Threadpool that propagates SpanManager.currentSpan() into threads
+### Threadpool that propagates SpanManager.current().getSpan() into threads
 
 ```java
     class TracedCall implements Callable<String> {
@@ -131,7 +131,7 @@ Then the application can propagate this _currentSpan_ into background threads:
         
         @Override
         public String call() {
-            Span currentSpan = spanManager.currentSpan(); // Propagated span from caller
+            Span currentSpan = spanManager.current().getSpan(); // Propagated span from caller
             // ...
         }
     }
@@ -155,10 +155,10 @@ Then the application can propagate this _currentSpan_ into background threads:
 
 ### Propagating threadpool with 'ManagedSpan' Tracer
 
-When starting a new span and making it the _currentSpan_, the manual example above used:
+When starting a new span and making it the _current_ Span, the manual example above used:
 ```java
     try (Span span = tracer.buildSpan("main").start();           // start span
-            ManagedSpan managed = spanManager.manage(span)) {    // set currentSpan() to span
+            ManagedSpan managed = spanManager.manage(span)) {    // update current Span
         // ...traced block of code...
     }
 ```
@@ -173,7 +173,7 @@ It also releases it again when the span is finished:
         ExecutorService threadpool = new SpanPropagatingExecutorService(anyThreadpool(), spanManager);
 
         void run() {
-            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent == currentSpan
+            try (Span parent = tracer.buildSpan("parentOperation").start()) { // parent == current Span
             
                 // Scheduling the traced call:
                 Future<String> result = threadpool.submit(new TracedCall());
@@ -190,7 +190,7 @@ a `try-with-resources` code block is insufficient.
 
 Existing filters that start / finish new spans asynchronously can simply 
 be supplied with the `ManagedSpanTracer` around the existing tracer.
-This sets the _currentSpan_ from the request filter
+This sets the _current_ Span from the request filter
 and calls `release()` automatically from the response filter
 when the existing filter finishes the span.  
 An example would be using the [opentracing jaxrs filters](https://github.com/opentracing-contrib/java-jaxrs) 
@@ -205,7 +205,7 @@ Handling the request:
     final SpanManager spanManager = ... // inject or DefaultSpanManager.getInstance();
     void onRequest(RequestContext reqCtx) {
         Span span = ... // either obtain Span from previous filter or start from the request
-        ManagedSpan managedSpan = spanManager.manage(span); // span is now currentSpan.
+        ManagedSpan managedSpan = spanManager.manage(span); // span is now current Span.
         reqCtx.put(SOMEKEY, managedSpan);
     }
 ```
@@ -214,7 +214,7 @@ For the response:
 ```java
     final SpanManager spanManager = ...
     void onResponse(RequestContext reqCtx, ResponseContext resCtx) {
-        spanManager.clear(); // Clear stack containing the currentSpan if this is a boundary-filter
+        spanManager.clear(); // Clear stack containing the current Span if this is a boundary-filter
         // or: 
         // ManagedSpan managedSpan = reqCtx.get(SOMEKEY);
         // managedSpan.release();

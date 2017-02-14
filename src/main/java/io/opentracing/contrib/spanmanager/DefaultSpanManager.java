@@ -35,10 +35,9 @@ import java.util.logging.Logger;
 public final class DefaultSpanManager implements SpanManager {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultSpanManager.class.getName());
-
-    private final ManagedSpan NO_MANAGED_SPAN = new LinkedManagedSpan(null, null);
-
     private static final DefaultSpanManager INSTANCE = new DefaultSpanManager();
+    private static final ManagedSpan NO_MANAGED_SPAN = new NoManagedSpan();
+
     private final ThreadLocal<LinkedManagedSpan> managed = new ThreadLocal<LinkedManagedSpan>();
 
     private DefaultSpanManager() {
@@ -72,12 +71,6 @@ public final class DefaultSpanManager implements SpanManager {
     }
 
     @Override
-    public Span currentSpan() {
-        LinkedManagedSpan current = refreshCurrent();
-        return current != null && current.span != null ? current.span : NoopSpan.INSTANCE;
-    }
-
-    @Override
     public SpanManager.ManagedSpan manage(Span span) {
         LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, refreshCurrent());
         managed.set(managedSpan);
@@ -87,12 +80,19 @@ public final class DefaultSpanManager implements SpanManager {
     @Override
     public ManagedSpan current() {
         LinkedManagedSpan current = refreshCurrent();
-        return current != null && current.span != null ? current : NO_MANAGED_SPAN;
+        return current != null ? current : NO_MANAGED_SPAN;
     }
 
     @Override
     public void clear() {
         managed.remove();
+    }
+
+    @Override
+    @Deprecated
+    public Span currentSpan() {
+        ManagedSpan current = current();
+        return current.getSpan() != null ? current.getSpan() : NoopSpan.INSTANCE;
     }
 
     @Override
@@ -131,8 +131,35 @@ public final class DefaultSpanManager implements SpanManager {
 
         @Override
         public String toString() {
-            return "LinkedManagedSpan{" + span + '}';
+            return getClass().getSimpleName() + '{' + span + '}';
         }
     }
 
+    /**
+     * Empty implementation signifying there is no managed span.
+     */
+    private static final class NoManagedSpan implements ManagedSpan {
+        private NoManagedSpan() {
+        }
+
+        @Override
+        public Span getSpan() {
+            return null;
+        }
+
+        @Override
+        public void release() {
+            // no-op
+        }
+
+        @Override
+        public void close() {
+            // no-op
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName();
+        }
+    }
 }

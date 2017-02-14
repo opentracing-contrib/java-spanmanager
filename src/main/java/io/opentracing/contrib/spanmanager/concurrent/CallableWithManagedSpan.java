@@ -45,7 +45,7 @@ final class CallableWithManagedSpan<T> implements Callable<T> {
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        final SpanManager.ManagedSpan managedSpan = spanManager.manage(spanToManage);
+        SpanManager.ManagedSpan managedSpan = spanManager.manage(spanToManage);
         try {
             return delegate.call();
         } finally {

@@ -31,6 +31,7 @@ import java.util.concurrent.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
 public class SpanPropagatingExecutorServiceTest {
@@ -129,20 +130,20 @@ public class SpanPropagatingExecutorServiceTest {
         subject.execute(future);
         future.get();
 
-        assertThat("Current span in thread", runnable.span, allOf(notNullValue(), instanceOf(NoopSpan.class)));
+        assertNull("Current span in thread", runnable.span);
     }
 
     @Test
     public void testSubmitRunnableWithoutCurrentSpan() throws ExecutionException, InterruptedException {
         CurrentSpanRunnable runnable = new CurrentSpanRunnable();
         subject.submit(runnable).get(); // submit and block.
-        assertThat("Current span in thread", runnable.span, allOf(notNullValue(), instanceOf(NoopSpan.class)));
+        assertNull("Current span in thread", runnable.span);
     }
 
     @Test
     public void testSubmitCallableWithoutCurrentSpan() throws ExecutionException, InterruptedException {
         Future<Span> threadSpan = subject.submit(new CurrentSpanCallable());
-        assertThat("Current span in thread", threadSpan.get(), allOf(notNullValue(), instanceOf(NoopSpan.class)));
+        assertNull("Current span in thread", threadSpan.get());
     }
 
     static class CurrentSpanRunnable implements Runnable {

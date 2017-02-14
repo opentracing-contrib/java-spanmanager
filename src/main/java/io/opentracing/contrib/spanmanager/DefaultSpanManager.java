@@ -36,6 +36,8 @@ public final class DefaultSpanManager implements SpanManager {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultSpanManager.class.getName());
 
+    private final ManagedSpan NO_MANAGED_SPAN = new LinkedManagedSpan(null, null);
+
     private static final DefaultSpanManager INSTANCE = new DefaultSpanManager();
     private final ThreadLocal<LinkedManagedSpan> managed = new ThreadLocal<LinkedManagedSpan>();
 
@@ -80,6 +82,12 @@ public final class DefaultSpanManager implements SpanManager {
         LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, refreshCurrent());
         managed.set(managedSpan);
         return managedSpan;
+    }
+
+    @Override
+    public ManagedSpan current() {
+        LinkedManagedSpan current = refreshCurrent();
+        return current != null && current.span != null ? current : NO_MANAGED_SPAN;
     }
 
     @Override

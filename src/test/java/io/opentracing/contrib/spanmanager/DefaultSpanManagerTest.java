@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
 public class DefaultSpanManagerTest {
@@ -39,25 +40,25 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
-        assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         ManagedSpan managed2 = manager.manage(span2);
-        assertThat("pushed span2", manager.currentSpan(), is(sameInstance(span2)));
+        assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
         ManagedSpan managed3 = manager.manage(span3);
-        assertThat("pushed span3", manager.currentSpan(), is(sameInstance(span3)));
+        assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         managed3.release();
-        assertThat("popped span3", manager.currentSpan(), is(sameInstance(span2)));
+        assertThat("popped span3", manager.current().getSpan(), is(sameInstance(span2)));
 
         managed2.release();
-        assertThat("popped span2", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertThat("popped span1", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     @Test
@@ -65,23 +66,23 @@ public class DefaultSpanManagerTest {
         Span span1 = mock(Span.class);
         Span span2 = mock(Span.class);
 
-        assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
-        assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         ManagedSpan managed2 = manager.manage(span2);
-        assertThat("pushed span2", manager.currentSpan(), is(sameInstance(span2)));
+        assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
         managed2.release();
         managed2.release();
-        assertThat("popped span2", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
         managed2.release();
         managed1.release();
         managed2.release();
-        assertThat("popped span1", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span1", manager.current().getSpan());
     }
 
 
@@ -91,25 +92,25 @@ public class DefaultSpanManagerTest {
         Span span2 = null;
         Span span3 = mock(Span.class);
 
-        assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
-        assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         ManagedSpan managed2 = manager.manage(span2);
-        assertThat("pushed span2", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("pushed span2", manager.current().getSpan());
 
         ManagedSpan managed3 = manager.manage(span3);
-        assertThat("pushed span3", manager.currentSpan(), is(sameInstance(span3)));
+        assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         managed3.release();
-        assertThat("popped span3", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span3", manager.current().getSpan());
 
         managed2.release();
-        assertThat("popped span2", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertThat("popped span1", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     @Test
@@ -118,26 +119,26 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
-        assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         ManagedSpan managed2 = manager.manage(span2);
-        assertThat("pushed span2", manager.currentSpan(), is(sameInstance(span2)));
+        assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
         ManagedSpan managed3 = manager.manage(span3);
-        assertThat("pushed span3", manager.currentSpan(), is(sameInstance(span3)));
+        assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         // Pop2: Span1 -> Span2(X) -> Span3  :  currentSpan stays Span3
         managed2.release();
-        assertThat("released span2", manager.currentSpan(), is(sameInstance(span3)));
+        assertThat("released span2", manager.current().getSpan(), is(sameInstance(span3)));
 
         managed3.release();
-        assertThat("skipped span2 (already-released)", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("skipped span2 (already-released)", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertThat("popped span1", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span1", manager.current().getSpan());
     }
 
     /**
@@ -153,16 +154,16 @@ public class DefaultSpanManagerTest {
         Span span2 = mock(Span.class);
         Span span3 = mock(Span.class);
 
-        assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("empty stack", manager.current().getSpan());
 
         ManagedSpan managed1 = manager.manage(span1);
-        assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
         final ManagedSpan managed2 = manager.manage(span2);
-        assertThat("pushed span2", manager.currentSpan(), is(sameInstance(span2)));
+        assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
         ManagedSpan managed3 = manager.manage(span3);
-        assertThat("pushed span3", manager.currentSpan(), is(sameInstance(span3)));
+        assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         // Schedule 10 threads to release managed2
         Thread[] releasers = new Thread[10];
@@ -183,10 +184,26 @@ public class DefaultSpanManagerTest {
         // Wait for managed2.releases
         for (int i = 0; i < releasers.length; i++) releasers[i].join();
 
-        assertThat("popped span2+3", manager.currentSpan(), is(sameInstance(span1)));
+        assertThat("popped span2+3", manager.current().getSpan(), is(sameInstance(span1)));
 
         managed1.release();
-        assertThat("popped span1", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
+        assertNull("popped span1", manager.current().getSpan());
+    }
+
+    @Test
+    public void testExplicitRelease() {
+        Span span1 = mock(Span.class);
+
+        assertNull("empty stack", manager.current().getSpan());
+
+        manager.manage(span1);
+        assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
+
+        manager.current().release();
+        assertNull("popped span1", manager.current().getSpan());
+
+        // Try releasing - should not have any effect
+        manager.current().release();
     }
 
 }

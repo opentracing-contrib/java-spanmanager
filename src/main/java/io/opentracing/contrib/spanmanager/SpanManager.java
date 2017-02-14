@@ -31,6 +31,7 @@ public interface SpanManager {
      *
      * @return The current Span, or the <code>NoopSpan</code> if there is no managed span.
      * @see SpanManager#manage(Span)
+     * @deprecated Use SpanManager#current() instead
      */
     Span currentSpan();
 
@@ -43,6 +44,14 @@ public interface SpanManager {
      * @see ManagedSpan#release()
      */
     ManagedSpan manage(Span span);
+
+    /**
+     * Return the current {@link ManagedSpan}.
+     *
+     * @return The current ManagedSpan
+     * @see SpanManager#manage(Span)
+     */
+    ManagedSpan current();
 
     /**
      * Unconditional cleanup of all managed spans including any parents.
@@ -67,7 +76,7 @@ public interface SpanManager {
         /**
          * The span that became the managed span at some point.
          *
-         * @return The contained span to be released.
+         * @return The contained span to be released, or null if no span is being managed
          */
         Span getSpan();
 

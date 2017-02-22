@@ -17,7 +17,7 @@ import io.opentracing.Span;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
 /**
- * {@link Runnable} wrapper that will execute with a {@link SpanManager#manage(Span) managed span}
+ * {@link Runnable} wrapper that will execute with a {@link SpanManager#activate(Span) managed active span}
  * specified from the scheduling thread.
  *
  * @see SpanManager
@@ -40,11 +40,11 @@ final class RunnableWithManagedSpan implements Runnable {
      * Performs the runnable action with the specified managed span.
      */
     public void run() {
-        SpanManager.ManagedSpan managedSpan = spanManager.manage(spanToManage);
+        SpanManager.ManagedSpan managedSpan = spanManager.activate(spanToManage);
         try {
             delegate.run();
         } finally {
-            managedSpan.release();
+            managedSpan.deactivate();
         }
     }
 

@@ -20,7 +20,7 @@ import io.opentracing.contrib.spanmanager.SpanManager;
 import java.util.Map;
 
 /**
- * A {@link Span} that automatically {@link #release() releases}
+ * A {@link Span} that automatically {@link #deactivate() deactivates}
  * when {@link #finish() finished} or {@link #close() closed}.
  * <p>
  * All other methods are forwarded to the actual managed Span.
@@ -43,43 +43,43 @@ final class AutoReleasingManagedSpan implements Span, SpanManager.ManagedSpan {
      * Releases this current ManagedSpan.
      */
     @Override
-    public void release() {
-        managedSpan.release();
+    public void deactivate() {
+        managedSpan.deactivate();
     }
 
     /**
-     * {@link Span#finish() Finishes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#finish() Finishes} the delegate and {@link SpanManager.ManagedSpan#deactivate() releases} this ManagedSpan.
      */
     @Override
     public void finish() {
         try {
             getSpan().finish();
         } finally {
-            release();
+            deactivate();
         }
     }
 
     /**
-     * {@link Span#finish(long) Finishes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#finish(long) Finishes} the delegate and {@link SpanManager.ManagedSpan#deactivate() releases} this ManagedSpan.
      */
     @Override
     public void finish(long finishMicros) {
         try {
             getSpan().finish(finishMicros);
         } finally {
-            release();
+            deactivate();
         }
     }
 
     /**
-     * {@link Span#close() Closes} the delegate and {@link SpanManager.ManagedSpan#release() releases} this ManagedSpan.
+     * {@link Span#close() Closes} the delegate and {@link SpanManager.ManagedSpan#deactivate() releases} this ManagedSpan.
      */
     @Override
     public void close() {
         try {
             getSpan().close();
         } finally {
-            release();
+            deactivate();
         }
     }
 

@@ -71,7 +71,7 @@ public final class DefaultSpanManager implements SpanManager {
     }
 
     @Override
-    public SpanManager.ManagedSpan manage(Span span) {
+    public SpanManager.ManagedSpan activate(Span span) {
         LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, refreshCurrent());
         managed.set(managedSpan);
         return managedSpan;
@@ -95,6 +95,15 @@ public final class DefaultSpanManager implements SpanManager {
         return current.getSpan() != null ? current.getSpan() : NoopSpan.INSTANCE;
     }
 
+    /**
+     * @see #activate(Span)
+     * @deprecated renamed to activate()
+     */
+    @Deprecated
+    public SpanManager.ManagedSpan manage(Span span) {
+        return activate(span);
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName();
@@ -115,7 +124,7 @@ public final class DefaultSpanManager implements SpanManager {
             return span;
         }
 
-        public void release() {
+        public void deactivate() {
             if (released.compareAndSet(false, true)) {
                 LinkedManagedSpan current = refreshCurrent(); // Trigger stack-unwinding algorithm.
                 LOGGER.log(Level.FINER, "Released {0}, current span is {1}.", new Object[]{this, current});
@@ -126,7 +135,16 @@ public final class DefaultSpanManager implements SpanManager {
 
         @Override
         public void close() {
-            release();
+            deactivate();
+        }
+
+        /**
+         * @see #deactivate()
+         * @deprecated renamed to deactivate()
+         */
+        @Deprecated
+        public void release() {
+            deactivate();
         }
 
         @Override
@@ -148,7 +166,7 @@ public final class DefaultSpanManager implements SpanManager {
         }
 
         @Override
-        public void release() {
+        public void deactivate() {
             // no-op
         }
 

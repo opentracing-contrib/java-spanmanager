@@ -24,8 +24,8 @@ import io.opentracing.propagation.Format;
  * <ol>
  * <li>It is a wrapper that forwards all calls to another {@link Tracer} implementation.</li>
  * <li>{@linkplain Span Spans} created with this tracer are
- * automatically {@link SpanManager#manage(Span) managed} when started,</li>
- * <li>and automatically {@link SpanManager.ManagedSpan#release() released} when they finish.</li>
+ * automatically {@link SpanManager#activate(Span) activated} when started,</li>
+ * <li>and automatically {@link SpanManager.ManagedSpan#deactivate() deactivated} when they finish.</li>
  * </ol>
  * <p>
  * Implementation note: This {@link Tracer} wraps the {@linkplain SpanBuilder} and {@linkplain Span}

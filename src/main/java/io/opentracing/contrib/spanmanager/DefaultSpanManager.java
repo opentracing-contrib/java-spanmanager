@@ -26,10 +26,10 @@ import java.util.logging.Logger;
  * <p>
  * The linked managed spans provide the following stack unwinding algorithm:
  * <ol>
- * <li>If the released span is not the <em>managed</em> span, the <em>current managed</em> span is left alone.</li>
- * <li>Otherwise, the first parent that is <em>not yet released</em> is set as the new managed span.</li>
+ * <li>If the deactivated span is not the <em>managed</em> span, the <em>current managed</em> span is left alone.</li>
+ * <li>Otherwise, the first parent that is <em>not yet deactivated</em> is set as the new managed span.</li>
  * <li>If no managed parents remain, the <em>managed span</em> is cleared.</li>
- * <li>Consecutive <code>release()</code> calls for already-released spans will be ignored.</li>
+ * <li>Consecutive <code>deactivate()</code> calls for already-deactivated spans will be ignored.</li>
  * </ol>
  */
 public final class DefaultSpanManager implements SpanManager {
@@ -55,12 +55,12 @@ public final class DefaultSpanManager implements SpanManager {
      * <p>
      * See {@link DefaultSpanManager class javadoc} for a full description.
      *
-     * @return The current non-released LinkedManagedSpan or <code>null</code> if none remained.
+     * @return The current non-deactivated LinkedManagedSpan or <code>null</code> if none remained.
      */
     private LinkedManagedSpan refreshCurrent() {
         LinkedManagedSpan managedSpan = managed.get();
         LinkedManagedSpan current = managedSpan;
-        while (current != null && current.released.get()) { // Unwind stack if necessary.
+        while (current != null && current.deactivated.get()) { // Unwind stack if necessary.
             current = current.parent;
         }
         if (current != managedSpan) { // refresh current if necessary.
@@ -71,7 +71,7 @@ public final class DefaultSpanManager implements SpanManager {
     }
 
     @Override
-    public SpanManager.ManagedSpan activate(Span span) {
+    public ManagedSpan activate(Span span) {
         LinkedManagedSpan managedSpan = new LinkedManagedSpan(span, refreshCurrent());
         managed.set(managedSpan);
         return managedSpan;
@@ -100,7 +100,7 @@ public final class DefaultSpanManager implements SpanManager {
      * @deprecated renamed to activate()
      */
     @Deprecated
-    public SpanManager.ManagedSpan manage(Span span) {
+    public ManagedSpan manage(Span span) {
         return activate(span);
     }
 
@@ -109,10 +109,10 @@ public final class DefaultSpanManager implements SpanManager {
         return getClass().getSimpleName();
     }
 
-    private final class LinkedManagedSpan implements SpanManager.ManagedSpan {
+    private final class LinkedManagedSpan implements ManagedSpan {
         private final LinkedManagedSpan parent;
         private final Span span;
-        private final AtomicBoolean released = new AtomicBoolean(false);
+        private final AtomicBoolean deactivated = new AtomicBoolean(false);
 
         private LinkedManagedSpan(Span span, LinkedManagedSpan parent) {
             this.parent = parent;
@@ -125,11 +125,11 @@ public final class DefaultSpanManager implements SpanManager {
         }
 
         public void deactivate() {
-            if (released.compareAndSet(false, true)) {
+            if (deactivated.compareAndSet(false, true)) {
                 LinkedManagedSpan current = refreshCurrent(); // Trigger stack-unwinding algorithm.
                 LOGGER.log(Level.FINER, "Released {0}, current span is {1}.", new Object[]{this, current});
             } else {
-                LOGGER.log(Level.FINEST, "No action needed, {0} was already released.", this);
+                LOGGER.log(Level.FINEST, "No action needed, {0} was already deactivated.", this);
             }
         }
 

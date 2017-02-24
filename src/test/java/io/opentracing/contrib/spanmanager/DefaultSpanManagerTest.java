@@ -16,6 +16,7 @@ package io.opentracing.contrib.spanmanager;
 import io.opentracing.NoopSpan;
 import io.opentracing.Span;
 import io.opentracing.contrib.spanmanager.SpanManager.ManagedSpan;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,8 +29,13 @@ public class DefaultSpanManagerTest {
     SpanManager manager;
 
     @Before
-    public void resetManager() {
+    public void prepareManager() {
         manager = DefaultSpanManager.getInstance();
+        manager.clear();
+    }
+
+    @After
+    public void resetManager() {
         manager.clear();
     }
 

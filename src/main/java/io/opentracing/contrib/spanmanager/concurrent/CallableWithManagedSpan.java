@@ -19,7 +19,7 @@ import io.opentracing.contrib.spanmanager.SpanManager;
 import java.util.concurrent.Callable;
 
 /**
- * {@link Callable} wrapper that will execute with a {@link SpanManager#manage(Span) managed span}
+ * {@link Callable} wrapper that will execute with an {@link SpanManager#activate(Span) managed active span}
  * specified from the scheduling thread.
  *
  * @see SpanManager
@@ -45,11 +45,11 @@ final class CallableWithManagedSpan<T> implements Callable<T> {
      * @throws Exception if the original call threw an exception.
      */
     public T call() throws Exception {
-        SpanManager.ManagedSpan managedSpan = spanManager.manage(spanToManage);
+        SpanManager.ManagedSpan managedSpan = spanManager.activate(spanToManage);
         try {
             return delegate.call();
         } finally {
-            managedSpan.release();
+            managedSpan.deactivate();
         }
     }
 

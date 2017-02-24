@@ -13,7 +13,6 @@
  */
 package io.opentracing.contrib.spanmanager.concurrent;
 
-import io.opentracing.NoopSpan;
 import io.opentracing.Span;
 import io.opentracing.contrib.spanmanager.DefaultSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
@@ -60,7 +59,7 @@ public class SpanPropagatingExecutorServiceTest {
     @Test
     public void testExecuteRunnable() throws ExecutionException, InterruptedException {
         CurrentSpanRunnable runnable = new CurrentSpanRunnable();
-        ManagedSpan callerManagedSpan = spanManager.manage(mock(Span.class));
+        ManagedSpan callerManagedSpan = spanManager.activate(mock(Span.class));
         try {
 
             // Execute runnable and wait for completion.
@@ -70,35 +69,35 @@ public class SpanPropagatingExecutorServiceTest {
 
             assertThat("Current span in thread", runnable.span, is(sameInstance(callerManagedSpan.getSpan())));
         } finally {
-            callerManagedSpan.release();
+            callerManagedSpan.deactivate();
         }
     }
 
     @Test
     public void testSubmitRunnable() throws ExecutionException, InterruptedException {
         CurrentSpanRunnable runnable = new CurrentSpanRunnable();
-        ManagedSpan callerManagedSpan = spanManager.manage(mock(Span.class));
+        ManagedSpan callerManagedSpan = spanManager.activate(mock(Span.class));
         try {
 
             subject.submit(runnable).get(); // submit and block.
             assertThat("Current span in thread", runnable.span, is(sameInstance(callerManagedSpan.getSpan())));
 
         } finally {
-            callerManagedSpan.release();
+            callerManagedSpan.deactivate();
         }
     }
 
     @Test
     public void testSubmitCallable() throws ExecutionException, InterruptedException {
         Callable<Span> callable = new CurrentSpanCallable();
-        ManagedSpan callerManagedSpan = spanManager.manage(mock(Span.class));
+        ManagedSpan callerManagedSpan = spanManager.activate(mock(Span.class));
         try {
 
             Future<Span> threadSpan = subject.submit(callable);
             assertThat("Current span in thread", threadSpan.get(), is(sameInstance(callerManagedSpan.getSpan())));
 
         } finally {
-            callerManagedSpan.release();
+            callerManagedSpan.deactivate();
         }
     }
 
@@ -106,7 +105,7 @@ public class SpanPropagatingExecutorServiceTest {
     public void testInvokeAll() throws ExecutionException, InterruptedException {
         Collection<Callable<Span>> callables = Arrays.<Callable<Span>>asList(
                 new CurrentSpanCallable(), new CurrentSpanCallable(), new CurrentSpanCallable());
-        ManagedSpan callerManagedSpan = spanManager.manage(mock(Span.class));
+        ManagedSpan callerManagedSpan = spanManager.activate(mock(Span.class));
         try {
 
             List<Future<Span>> futures = subject.invokeAll(callables);
@@ -116,7 +115,7 @@ public class SpanPropagatingExecutorServiceTest {
             }
 
         } finally {
-            callerManagedSpan.release();
+            callerManagedSpan.deactivate();
         }
     }
 

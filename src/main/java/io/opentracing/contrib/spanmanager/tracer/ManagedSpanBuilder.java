@@ -22,10 +22,10 @@ import io.opentracing.contrib.spanmanager.SpanManager;
 import java.util.Map;
 
 /**
- * {@link SpanBuilder} that automatically {@link SpanManager#manage(Span) activates} newly started spans.
+ * {@link SpanBuilder} that automatically {@link SpanManager#activate(Span) activates} newly started spans.
  * <p>
  * The activated ManagedSpan is wrapped in an {@linkplain AutoReleasingManagedSpan}
- * to automatically release when finished.<br>
+ * to automatically deactivate when finished.<br>
  * All other methods are forwarded to the delegate span builder.
  *
  * @see SpanManager
@@ -57,15 +57,15 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     /**
-     * Starts the built Span and {@link SpanManager#manage(Span) activates} it.
+     * Starts the built Span and {@link SpanManager#activate(Span) activates} it.
      *
      * @return a new 'current' Span that releases itself upon <em>finish</em> or <em>close</em> calls.
-     * @see SpanManager#manage(Span)
-     * @see AutoReleasingManagedSpan#release()
+     * @see SpanManager#activate(Span)
+     * @see AutoReleasingManagedSpan#deactivate()
      */
     @Override
     public Span start() {
-        return new AutoReleasingManagedSpan(spanManager.manage(delegate.start()));
+        return new AutoReleasingManagedSpan(spanManager.activate(delegate.start()));
     }
 
     // All other methods are forwarded to the delegate SpanBuilder.

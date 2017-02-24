@@ -31,32 +31,32 @@ public interface SpanManager {
      * Makes span the <em>current span</em> within the running process.
      *
      * @param span The span to become the current span.
-     * @return A managed object containing the current span and a way to release it again.
+     * @return A managed object containing the current span and a way to deactivate it again.
      * @see SpanManager#current()
-     * @see ManagedSpan#release()
+     * @see ManagedSpan#deactivate()
      */
-    ManagedSpan manage(Span span);
+    ManagedSpan activate(Span span);
 
     /**
      * Retrieve the current {@link ManagedSpan managed span}.
      * <p>
      * If there is no current managed span, an 'empty' managed span instance is returned
-     * for which {@link ManagedSpan#release() release()} has no effects
+     * for which {@link ManagedSpan#deactivate() deactivate()} has no effects
      * and whose {@link ManagedSpan#getSpan() getSpan()} method always returns {@code null}.
      *
      * @return The current managed span
-     * @see SpanManager#manage(Span)
+     * @see SpanManager#activate(Span)
      */
     ManagedSpan current();
 
     /**
      * Unconditional cleanup of all managed spans including any parents.
      * <p>
-     * This allows boundary filters to release all current spans
+     * This allows boundary filters to deactivate all current spans
      * before relinquishing control over their process,
      * which may end up repurposed by a threadpool.
      *
-     * @see ManagedSpan#release()
+     * @see ManagedSpan#deactivate()
      */
     void clear();
 
@@ -69,16 +69,16 @@ public interface SpanManager {
      * which is safe, as curren
      *
      * @return The current Span, or the <code>NoopSpan</code> if there is no managed span.
-     * @see SpanManager#manage(Span)
+     * @see SpanManager#activate(Span)
      * @see SpanManager#current()
      * @deprecated Please use <code>SpanManager.current().getSpan()</code> instead
      */
     Span currentSpan();
 
     /**
-     * To {@linkplain #release() release} a {@link SpanManager#manage(Span) managed span} with.
+     * To {@linkplain #deactivate() deactivate} a {@link SpanManager#activate(Span) managed active span} with.
      * <p>
-     * It must be possible to repeatedly call {@linkplain #release()} without side effects.
+     * It must be possible to repeatedly call {@linkplain #deactivate()} without side effects.
      *
      * @see SpanManager
      */
@@ -87,7 +87,7 @@ public interface SpanManager {
         /**
          * The span that became the managed span at some point.
          *
-         * @return The contained span to be released, or <code>null</code> if no span is being managed.
+         * @return The contained span that was activated, or <code>null</code> if no span is being managed.
          */
         Span getSpan();
 
@@ -96,15 +96,15 @@ public interface SpanManager {
          * <p>
          * Implementation notes:
          * <ol>
-         * <li>It is encouraged to restore the managed span as it was before this span became managed
+         * <li>It is encouraged to restore the managed span as it was before this span was activated
          * (providing stack-like behaviour).</li>
-         * <li>It must be possible to repeatedly call <code>release</code> without side effects.</li>
+         * <li>It must be possible to repeatedly call <code>deactivate</code> without side effects.</li>
          * </ol>
          */
-        void release();
+        void deactivate();
 
         /**
-         * Alias for {@link #release()} to allow easy use from try-with-resources.
+         * Alias for {@link #deactivate()} to allow easy use from try-with-resources.
          */
         void close();
 

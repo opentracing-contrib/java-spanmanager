@@ -41,22 +41,22 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed1 = manager.manage(span1);
+        ManagedSpan managed1 = manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        ManagedSpan managed2 = manager.manage(span2);
+        ManagedSpan managed2 = manager.activate(span2);
         assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
-        ManagedSpan managed3 = manager.manage(span3);
+        ManagedSpan managed3 = manager.activate(span3);
         assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
-        managed3.release();
+        managed3.deactivate();
         assertThat("popped span3", manager.current().getSpan(), is(sameInstance(span2)));
 
-        managed2.release();
+        managed2.deactivate();
         assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
-        managed1.release();
+        managed1.deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
     }
 
@@ -67,20 +67,20 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed1 = manager.manage(span1);
+        ManagedSpan managed1 = manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        ManagedSpan managed2 = manager.manage(span2);
+        ManagedSpan managed2 = manager.activate(span2);
         assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
-        managed2.release();
-        managed2.release();
+        managed2.deactivate();
+        managed2.deactivate();
         assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
-        managed1.release();
-        managed2.release();
-        managed1.release();
-        managed2.release();
+        managed1.deactivate();
+        managed2.deactivate();
+        managed1.deactivate();
+        managed2.deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
     }
 
@@ -93,22 +93,22 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed1 = manager.manage(span1);
+        ManagedSpan managed1 = manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        ManagedSpan managed2 = manager.manage(span2);
+        ManagedSpan managed2 = manager.activate(span2);
         assertThat("pushed span2", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed3 = manager.manage(span3);
+        ManagedSpan managed3 = manager.activate(span3);
         assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
-        managed3.release();
+        managed3.deactivate();
         assertThat("popped span3", manager.current().getSpan(), is(nullValue()));
 
-        managed2.release();
+        managed2.deactivate();
         assertThat("popped span2", manager.current().getSpan(), is(sameInstance(span1)));
 
-        managed1.release();
+        managed1.deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
     }
 
@@ -120,23 +120,23 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed1 = manager.manage(span1);
+        ManagedSpan managed1 = manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        ManagedSpan managed2 = manager.manage(span2);
+        ManagedSpan managed2 = manager.activate(span2);
         assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
-        ManagedSpan managed3 = manager.manage(span3);
+        ManagedSpan managed3 = manager.activate(span3);
         assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         // Pop2: Span1 -> Span2(X) -> Span3  :  currentSpan stays Span3
-        managed2.release();
+        managed2.deactivate();
         assertThat("released span2", manager.current().getSpan(), is(sameInstance(span3)));
 
-        managed3.release();
+        managed3.deactivate();
         assertThat("skipped span2 (already-released)", manager.current().getSpan(), is(sameInstance(span1)));
 
-        managed1.release();
+        managed1.deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
     }
 
@@ -155,13 +155,13 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        ManagedSpan managed1 = manager.manage(span1);
+        ManagedSpan managed1 = manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        final ManagedSpan managed2 = manager.manage(span2);
+        final ManagedSpan managed2 = manager.activate(span2);
         assertThat("pushed span2", manager.current().getSpan(), is(sameInstance(span2)));
 
-        ManagedSpan managed3 = manager.manage(span3);
+        ManagedSpan managed3 = manager.activate(span3);
         assertThat("pushed span3", manager.current().getSpan(), is(sameInstance(span3)));
 
         // Schedule 10 threads to release managed2
@@ -170,7 +170,7 @@ public class DefaultSpanManagerTest {
             releasers[i] = new Thread() {
                 @Override
                 public void run() {
-                    managed2.release();
+                    managed2.deactivate();
                 }
             };
         }
@@ -178,14 +178,14 @@ public class DefaultSpanManagerTest {
         // Schedule managed2.release() 10x
         for (int i = 0; i < releasers.length; i++) releasers[i].start();
 
-        managed3.release();
+        managed3.deactivate();
 
         // Wait for managed2.releases
         for (int i = 0; i < releasers.length; i++) releasers[i].join();
 
         assertThat("popped span2+3", manager.current().getSpan(), is(sameInstance(span1)));
 
-        managed1.release();
+        managed1.deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
     }
 
@@ -195,14 +195,14 @@ public class DefaultSpanManagerTest {
 
         assertThat("empty stack", manager.current().getSpan(), is(nullValue()));
 
-        manager.manage(span1);
+        manager.activate(span1);
         assertThat("pushed span1", manager.current().getSpan(), is(sameInstance(span1)));
 
-        manager.current().release();
+        manager.current().deactivate();
         assertThat("popped span1", manager.current().getSpan(), is(nullValue()));
 
         // Try releasing - should not have any effect
-        manager.current().release();
+        manager.current().deactivate();
     }
 
     @Test
@@ -211,7 +211,7 @@ public class DefaultSpanManagerTest {
         assertThat("empty stack", manager.currentSpan(), is(instanceOf(NoopSpan.class)));
 
         Span span1 = mock(Span.class);
-        manager.manage(span1);
+        manager.activate(span1);
         assertThat("pushed span1", manager.currentSpan(), is(sameInstance(span1)));
     }
 

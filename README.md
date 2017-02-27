@@ -41,17 +41,9 @@ This `ExecutorService` _propagates the current span_
 from the caller into each call that is executed.  
 The current span of the caller is obtained from the configured `SpanManager`.
 
-_Please Note:_ The current span is merely _propagated_ (as-is).  
+_Please note:_ The current span is merely _propagated into the background thread_ (as-is).  
 It is explicitly **not** finished when the calls end,
 nor will new spans be automatically related to the propagated span.
-
-### SpanPropagatingExecutors
-
-Contains factory-methods similar to standard java `Executors`:  
- - `SpanPropagatingExecutors.newFixedThreadPool(int, SpanManager)`
- - `SpanPropagatingExecutors.newSingleThreadExecutor(SpanManager)`
- - `SpanPropagatingExecutors.newCachedThreadPool(SpanManager)`
- - Variants of the above with additional `ThreadFactory` argument.
 
 ## ManagedSpanTracer
 

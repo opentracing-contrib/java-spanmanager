@@ -13,11 +13,13 @@
  */
 package io.opentracing.contrib.spanmanager;
 
-import io.opentracing.contrib.spanmanager.concurrent.SpanPropagatingExecutors;
+import io.opentracing.contrib.spanmanager.concurrent.SpanPropagatingExecutorService;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
+
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class DefaultSpanManagerMemoryTest {
 
@@ -46,7 +48,7 @@ public class DefaultSpanManagerMemoryTest {
     @Test
     @Ignore // This is a long-running unit test that shouldn't be enabled in the build by default.
     public void testMemoryLeak() throws InterruptedException {
-        ExecutorService executor = SpanPropagatingExecutors.newSingleThreadExecutor(DefaultSpanManager.getInstance());
+        ExecutorService executor = new SpanPropagatingExecutorService(newSingleThreadExecutor(), DefaultSpanManager.getInstance());
         recurseThreads(executor);
 
         // Let it run for a minute.

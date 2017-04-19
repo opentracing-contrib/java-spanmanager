@@ -3,7 +3,7 @@
 # Span manager for Java
 
 :heavy_exclamation_mark: **Warning:** This library is still a work in progress!  
-Please watch pull-request [#111 in opentracing-java](https://github.com/opentracing/opentracing-java/pull/111) for progress 
+Please watch pull-request [#115 in opentracing-java](https://github.com/opentracing/opentracing-java/pull/115) for progress 
 on inclusion in the standard Java OpenTracing libraries.
 
 This library provides a way to manage spans and propagate them to other threads.

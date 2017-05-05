@@ -54,14 +54,17 @@ public final class ManagedSpanTracer implements Tracer {
         this.spanManager = spanManager;
     }
 
+    @Override
     public <C> void inject(SpanContext spanContext, Format<C> format, C carrier) {
         delegate.inject(spanContext, format, carrier);
     }
 
+    @Override
     public <C> SpanContext extract(Format<C> format, C carrier) {
         return delegate.extract(format, carrier);
     }
 
+    @Override
     public SpanBuilder buildSpan(String operationName) {
         return new ManagedSpanBuilder(delegate.buildSpan(operationName), spanManager);
     }

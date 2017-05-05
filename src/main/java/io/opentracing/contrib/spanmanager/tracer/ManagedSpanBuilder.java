@@ -72,30 +72,37 @@ final class ManagedSpanBuilder implements SpanBuilder {
 
     // All other methods are forwarded to the delegate SpanBuilder.
 
+    @Override
     public SpanBuilder asChildOf(SpanContext parent) {
         return addReference(References.CHILD_OF, parent);
     }
 
+    @Override
     public SpanBuilder asChildOf(Span parent) {
         return addReference(References.CHILD_OF, parent.context());
     }
 
+    @Override
     public SpanBuilder addReference(String referenceType, SpanContext context) {
         return rewrap(delegate.addReference(referenceType, context));
     }
 
+    @Override
     public SpanBuilder withTag(String key, String value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withTag(String key, boolean value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withTag(String key, Number value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withStartTimestamp(long microseconds) {
         return rewrap(delegate.withStartTimestamp(microseconds));
     }

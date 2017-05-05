@@ -19,7 +19,9 @@ import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * {@link SpanBuilder} that automatically {@link SpanManager#activate(Span) activates} newly started spans.
@@ -79,9 +81,6 @@ final class ManagedSpanBuilder implements SpanBuilder {
     }
 
     public SpanBuilder addReference(String referenceType, SpanContext context) {
-        if (context instanceof ManagedSpanBuilder) { // Weird that SpanBuilder extends Context!
-            context = ((ManagedSpanBuilder) context).delegate;
-        }
         return rewrap(delegate.addReference(referenceType, context));
     }
 
@@ -101,8 +100,14 @@ final class ManagedSpanBuilder implements SpanBuilder {
         return rewrap(delegate.withStartTimestamp(microseconds));
     }
 
+    /**
+     * @return Empty set of baggage items.
+     * @deprecated Don't call this anymore, SpanBuilder and SpanContext are separated since opentracing-api v0.22.0.
+     */
     public Iterable<Map.Entry<String, String>> baggageItems() {
-        return delegate.baggageItems();
+        Logger.getLogger(getClass().getName())
+                .warning("SpanContext baggageItems() method called for SpanBuilder!");
+        return Collections.<String, String>emptyMap().entrySet();
     }
 
 }

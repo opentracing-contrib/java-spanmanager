@@ -21,7 +21,7 @@
     <!-- Artifact identification -->
     <groupId>io.opentracing.contrib</groupId>
     <artifactId>opentracing-spanmanager</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.5</version>
     <packaging>jar</packaging>
 
     <!-- Project information -->
@@ -70,7 +70,7 @@
         <url>https://github.com/opentracing-contrib/java-spanmanager</url>
         <connection>scm:git:https://github.com/opentracing-contrib/java-spanmanager.git</connection>
         <developerConnection>scm:git:https://github.com/opentracing-contrib/java-spanmanager.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.0.5</tag>
     </scm>
 
     <issueManagement>

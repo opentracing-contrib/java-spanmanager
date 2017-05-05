@@ -19,7 +19,9 @@ import io.opentracing.SpanContext;
 import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * {@link SpanBuilder} that automatically {@link SpanManager#activate(Span) activates} newly started spans.
@@ -70,39 +72,49 @@ final class ManagedSpanBuilder implements SpanBuilder {
 
     // All other methods are forwarded to the delegate SpanBuilder.
 
+    @Override
     public SpanBuilder asChildOf(SpanContext parent) {
         return addReference(References.CHILD_OF, parent);
     }
 
+    @Override
     public SpanBuilder asChildOf(Span parent) {
         return addReference(References.CHILD_OF, parent.context());
     }
 
+    @Override
     public SpanBuilder addReference(String referenceType, SpanContext context) {
-        if (context instanceof ManagedSpanBuilder) { // Weird that SpanBuilder extends Context!
-            context = ((ManagedSpanBuilder) context).delegate;
-        }
         return rewrap(delegate.addReference(referenceType, context));
     }
 
+    @Override
     public SpanBuilder withTag(String key, String value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withTag(String key, boolean value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withTag(String key, Number value) {
         return rewrap(delegate.withTag(key, value));
     }
 
+    @Override
     public SpanBuilder withStartTimestamp(long microseconds) {
         return rewrap(delegate.withStartTimestamp(microseconds));
     }
 
+    /**
+     * @return Empty set of baggage items.
+     * @deprecated Don't call this anymore, SpanBuilder and SpanContext are separated since opentracing-api v0.22.0.
+     */
     public Iterable<Map.Entry<String, String>> baggageItems() {
-        return delegate.baggageItems();
+        Logger.getLogger(getClass().getName())
+                .warning("SpanContext baggageItems() method called for SpanBuilder!");
+        return Collections.<String, String>emptyMap().entrySet();
     }
 
 }

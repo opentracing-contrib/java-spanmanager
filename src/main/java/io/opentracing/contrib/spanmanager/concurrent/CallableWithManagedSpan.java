@@ -44,6 +44,7 @@ final class CallableWithManagedSpan<T> implements Callable<T> {
      * @return The result from the original call.
      * @throws Exception if the original call threw an exception.
      */
+    @Override
     public T call() throws Exception {
         SpanManager.ManagedSpan managedSpan = spanManager.activate(spanToManage);
         try {

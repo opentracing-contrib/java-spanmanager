@@ -39,6 +39,7 @@ final class RunnableWithManagedSpan implements Runnable {
     /**
      * Performs the runnable action with the specified managed span.
      */
+    @Override
     public void run() {
         SpanManager.ManagedSpan managedSpan = spanManager.activate(spanToManage);
         try {

@@ -13,6 +13,7 @@
  */
 package io.opentracing.contrib.spanmanager.tracer;
 
+import io.opentracing.ActiveSpan;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
@@ -74,4 +75,13 @@ public final class ManagedSpanTracer implements Tracer {
         return "ManagedSpanTracer{" + delegate + '}';
     }
 
+    @Override
+    public ActiveSpan activeSpan() {
+        return delegate.activeSpan();
+    }
+
+    @Override
+    public ActiveSpan makeActive(final Span span) {
+        return delegate.makeActive(span);
+    }
 }

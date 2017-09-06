@@ -13,9 +13,12 @@
  */
 package io.opentracing.contrib.spanmanager.tracer;
 
+import io.opentracing.ActiveSpan;
+import io.opentracing.BaseSpan;
 import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.contrib.spanmanager.SpanManager;
 
@@ -74,17 +77,22 @@ final class ManagedSpanBuilder implements SpanBuilder {
 
     @Override
     public SpanBuilder asChildOf(SpanContext parent) {
-        return addReference(References.CHILD_OF, parent);
+        return rewrap(addReference(References.CHILD_OF, parent));
     }
 
     @Override
-    public SpanBuilder asChildOf(Span parent) {
-        return addReference(References.CHILD_OF, parent.context());
+    public SpanBuilder asChildOf(final BaseSpan<?> parent) {
+        return rewrap(addReference(References.CHILD_OF, parent.context()));
     }
 
     @Override
     public SpanBuilder addReference(String referenceType, SpanContext context) {
         return rewrap(delegate.addReference(referenceType, context));
+    }
+
+    @Override
+    public SpanBuilder ignoreActiveSpan() {
+        return rewrap(delegate.ignoreActiveSpan());
     }
 
     @Override
@@ -105,6 +113,16 @@ final class ManagedSpanBuilder implements SpanBuilder {
     @Override
     public SpanBuilder withStartTimestamp(long microseconds) {
         return rewrap(delegate.withStartTimestamp(microseconds));
+    }
+
+    @Override
+    public ActiveSpan startActive() {
+        return delegate.startActive();
+    }
+
+    @Override
+    public Span startManual() {
+        return delegate.startManual();
     }
 
     /**

@@ -72,12 +72,12 @@ final class AutoReleasingManagedSpan implements Span, SpanManager.ManagedSpan {
     }
 
     /**
-     * {@link Span#close() Closes} the delegate and {@link SpanManager.ManagedSpan#deactivate() releases} this ManagedSpan.
+     * {@link Span#finish() Closes} the delegate and {@link SpanManager.ManagedSpan#deactivate() releases} this ManagedSpan.
      */
     @Override
     public void close() {
         try {
-            getSpan().close();
+            getSpan().finish();
         } finally {
             deactivate();
         }
